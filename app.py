@@ -13,12 +13,10 @@ def index():
     # Instantly renders the clean dashboard frame without any processing lag
     return render_template('index.html', run_analysis=False)
 
+# inside app.py
+
 @app.route('/analyze-async', methods=['POST'])
 def analyze_async():
-    """
-    Asynchronous API Endpoint called via JavaScript.
-    Processes data background loops and returns a clean JSON summary object.
-    """
     if 'file' not in request.files:
         return jsonify({"error": "No file payload detected"}), 400
         
@@ -27,44 +25,53 @@ def analyze_async():
         return jsonify({"error": "No selected file name found"}), 400
         
     try:
-        # Save target file to storage cache
         save_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(save_path)
         
-        # Read parameters sent from the frontend form metadata
         override_type = request.form.get('override_type') or None
         run_ai_checkbox = request.form.get('run_ai') == 'true'
 
-        # 1. Structural Classification
+        # Run auto-detect behind the scenes to establish a baseline truth
+        auto_detected_type, _ = LogClassifier.classify(save_path)
+        
+        # Decide which routing tag to execute
         if override_type:
             log_type = override_type.upper()
         else:
-            log_type, _ = LogClassifier.classify(save_path)
+            log_type = auto_detected_type
             
+        # Determine if a validation mismatch occurred
+        # (Ignore mismatch if override matches auto, or if auto is UNKNOWN but user tried to force a type)
+        mismatch_detected = False
+        if override_type and auto_detected_type != "UNKNOWN" and override_type.upper() != auto_detected_type:
+            mismatch_detected = True
+
         if log_type == "UNKNOWN":
             return jsonify({
                 "filename": file.filename,
                 "log_type": "UNKNOWN",
+                "auto_detect_type": auto_detected_type,
+                "mismatch_detected": False,
                 "alerts": [],
-                "ai_report": "### 🤖 Ingestion Error\nFramework parsing skipped: Unrecognized file metadata structural signatures."
+                "ai_report": "### 🤖 Ingestion Error\nFramework parsing skipped: Unrecognized file structural fingerprints."
             })
 
-        # 2. Extract Data via Factory
+        # Process through normal engineering pipeline steps
         parser = ParserFactory.get_parser(log_type)
         events = parser.parse(save_path)
 
-        # 3. Static Engine Heuristics Scanning
         engine = AnalysisEngine()
         alerts = engine.execute_pipeline(events)
 
-        # 4. Downstream Local AI Inference Call
         ai_layer = AIIntegrationLayer(use_local_ai=run_ai_checkbox)
         ai_report = ai_layer.generate_incident_summary(events, log_type)
 
-        # Return data directly as a JSON payload object instead of reloading the page
+        # Pack payload returning the mismatch context parameters
         return jsonify({
             "filename": file.filename,
             "log_type": log_type,
+            "auto_detect_type": auto_detected_type,
+            "mismatch_detected": mismatch_detected,
             "alerts": alerts,
             "ai_report": ai_report
         })

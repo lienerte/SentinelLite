@@ -95,12 +95,13 @@
             <div style="margin-bottom: 15px;">
                 <label for="override_type" style="display: block; margin-bottom: 5px; font-weight: bold;">Force Structural Context Override:</label>
                 <select name="override_type" id="override_type">
-                    <option value="">Auto-Detect Framework Classifiers</option>
-                    <option value="PCAP">PCAP Parser</option>
-                    <option value="AUTH">Auth Parser</option>
-                    <option value="WEB">Web Parser</option>
-                    <option value="JSON">Structured JSON Parser</option>
-                    <option value="FORTINET_IPS">Fortinet IPS Parser</option>
+                    <option value="">Auto-Detect Framework Classifiers (Recommended)</option>
+                    <option value="MULTI">Force Override: Mixed Multi-Protocol Log Tracker</option>
+                    <option value="PCAP">Force Override: PCAP Parser</option>
+                    <option value="AUTH">Force Override: Auth Parser</option>
+                    <option value="WEB">Force Override: Web Parser</option>
+                    <option value="JSON">Force Override: Structured JSON Parser</option>
+                    <option value="FORTINET_IPS">Force Override: Fortinet IPS Parser</option>
                 </select>
             </div>
 
@@ -192,33 +193,49 @@
             }, 1600);
 
             try {
-                // Post asynchronous stream context straight into Flask background layer
                 const response = await fetch('/analyze-async', {
                     method: 'POST',
                     body: formData
                 });
                 
                 const data = await response.json();
-                
                 if (!response.ok) throw new Error(data.error || "Ingestion pipeline crash encountered");
 
-                // Complete the progress animation sequence
                 progressFill.style.width = '100%';
                 statusMessage.innerText = "Analysis matrix generated successfully!";
 
-                // Populate Text Metrics inside the template layout
+                // Update baseline text fields
                 document.getElementById('res-filename').innerText = data.filename;
                 document.getElementById('res-log-type').innerText = data.log_type;
                 document.getElementById('res-alert-count').innerText = data.alerts.length;
 
-                // Build Static Alert Elements dynamically via JS loops
+                // Reset the alert wrapper output
                 alertsWrapper.innerHTML = '';
-                if (data.alerts.length === 0) {
+
+                // 1. EVALUATE MISMATCH WARN STATE FIRST
+                if (data.mismatch_detected) {
+                    alertsWrapper.innerHTML = `
+                        <div style="border: 2px dashed #f0a500; background: rgba(240, 165, 0, 0.1); padding: 18px; border-radius: 6px; margin: 15px 0;">
+                            <h4 style="color: #f0a500; margin: 0 0 8px 0; font-size: 1.1em;">⚠ Structural Boundary Override Mismatch Warning</h4>
+                            <p style="margin: 4px 0; line-height: 1.4;">
+                                You forced execution context routing: <code style="background: #222831; padding: 2px 6px; border-radius: 4px; color: #ff5722;">${data.log_type}</code>.<br>
+                                However, the automated ingestion classifier fingerprinted this file as: <code style="background: #222831; padding: 2px 6px; border-radius: 4px; color: #00adb5;">${data.auto_detect_type}</code>.
+                            </p>
+                            <p style="margin: 8px 0 0 0; font-size: 0.9em; color: #a0a0b0; font-style: italic;">
+                                Notice: Extracted telemetry loops yielded ${data.alerts.length} static incident markers. If this output seems unusually sparse, revert your selection block back to "Auto-Detect Framework Classifiers".
+                            </p>
+                        </div>`;
+                } 
+                // 2. Standard Clean State (Only displays if it genuinely passed classification cleanly)
+                else if (data.alerts.length === 0) {
                     alertsWrapper.innerHTML = `
                         <p style="color: #4e9f3d; font-weight: bold; background: rgba(78, 159, 61, 0.1); padding: 12px; border-radius: 4px;">
                             [+] Ingestion cycle clean. Context profiles clear of static rule heuristic triggers.
                         </p>`;
-                } else {
+                }
+
+                // 3. Populate any generated signatures/rules alerts below the warning card
+                if (data.alerts.length > 0) {
                     data.alerts.forEach(alert => {
                         const alertDiv = document.createElement('div');
                         alertDiv.className = `alert-item severity-${alert.severity}`;
@@ -231,7 +248,7 @@
                     });
                 }
 
-                // Render out AI Markdown output frame if data was populated
+                // Handle downstream AI presentation container mapping
                 if (data.ai_report) {
                     document.getElementById('res-ai-text').innerText = data.ai_report;
                     aiReportWrapper.style.display = 'block';
@@ -239,7 +256,6 @@
                     aiReportWrapper.style.display = 'none';
                 }
 
-                // Show the complete results card card layout gracefully
                 setTimeout(() => {
                     resultsContainer.style.display = 'block';
                     progressContainer.style.display = 'none';

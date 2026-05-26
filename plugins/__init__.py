@@ -7,18 +7,20 @@ Contains modular behavioral rules that scan normalized logs for attack indicator
 from .brute_force_plugin import BruteForcePlugin
 from .port_scan_plugin import PortScanPlugin
 from .volume_spike_plugin import VolumeSpikePlugin
+from .cross_protocol_correlation_plugin import CrossProtocolCorrelationPlugin # ◄ 1. IMPORT
 
 # Automated Manifest Compilation
-# The Analysis Engine reads this list directly to run active checks
 ACTIVE_PLUGINS = [
     BruteForcePlugin(),
     PortScanPlugin(),
-    VolumeSpikePlugin()
+    VolumeSpikePlugin(),
+    CrossProtocolCorrelationPlugin() # ◄ 2. REGISTER
 ]
 
 __all__ = [
     "BruteForcePlugin",
     "PortScanPlugin",
     "VolumeSpikePlugin",
+    "CrossProtocolCorrelationPlugin",
     "ACTIVE_PLUGINS"
 ]
