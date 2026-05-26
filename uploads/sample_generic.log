@@ -1,0 +1,2 @@
+{"timestamp": "2026-05-25T14:40:00Z", "src_ip": "172.16.5.5", "port": 80, "event_type": "FIREWALL_DROP", "message": "Inbound drop rule block"}
+{"timestamp": "2026-05-25T14:40:01Z", "src_ip": "172.16.5.5", "port": 443, "event_type": "FIREWALL_DROP", "message": "Inbound drop rule block"}

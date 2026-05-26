@@ -1,0 +1,5 @@
+May 25 12:01:02 target-server sshd[1240]: Failed password for invalid user root from 10.0.0.99 port 43210 ssh2
+May 25 12:01:05 target-server sshd[1240]: Failed password for invalid user root from 10.0.0.99 port 43214 ssh2
+May 25 12:01:08 target-server sshd[1240]: Failed password for invalid user root from 10.0.0.99 port 43218 ssh2
+May 25 12:01:10 target-server sshd[1240]: Failed password for invalid user root from 10.0.0.99 port 43222 ssh2
+May 25 12:01:12 target-server sshd[1240]: Failed password for invalid user root from 10.0.0.99 port 43226 ssh2

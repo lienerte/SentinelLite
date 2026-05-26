@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinelLite Operational Dashboard</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #1e1e24; 
+            color: #f4f4f9; 
+            margin: 30px; 
+        }
+        h1, h2, h3 { 
+            color: #00adb5; 
+        }
+        .card { 
+            background: #2a2a35; 
+            padding: 25px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+            margin-bottom: 25px; 
+        }
+        .btn { 
+            background-color: #00adb5; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 4px; 
+            font-weight: bold;
+            cursor: pointer; 
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background-color: #008f96;
+        }
+        select, input[type="file"] {
+            background: #393e46;
+            color: #f4f4f9;
+            border: 1px solid #4e5561;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .ai-toggle-container {
+            margin: 20px 0; 
+            background: #222831; 
+            padding: 15px; 
+            border-radius: 6px;
+            border-left: 4px solid #00adb5;
+        }
+        .alert-item { 
+            border-left: 5px solid #ff5722; 
+            background: #393e46; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 0 4px 4px 0; 
+        }
+        .severity-HIGH { border-color: #ff5722; } 
+        .severity-MEDIUM { border-color: #f0a500; } 
+        .severity-LOW { border-color: #3282b8; }
+        
+        .ai-report-box {
+            border: 1px solid #00adb5; 
+            background: #11141a; 
+            margin-top: 25px;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        pre { 
+            font-family: 'Consolas', 'Courier New', Courier, monospace; 
+            white-space: pre-wrap; 
+            color: #e1e1e6; 
+            font-size: 0.95em; 
+            line-height: 1.6;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>SentinelLite Analytic Dashboard</h1>
+    
+    <div class="card">
+        <h2>Ingestion Console</h2>
+        <form method="post" enctype="multipart/form-data">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Select Log/Capture File:</label>
+                <input type="file" name="file" required>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label for="override_type" style="display: block; margin-bottom: 5px; font-weight: bold;">Force Structural Context Override:</label>
+                <select name="override_type" id="override_type">
+                    <option value="">Auto-Detect Framework Classifiers</option>
+                    <option value="PCAP">PCAP Parser</option>
+                    <option value="AUTH">Auth Parser</option>
+                    <option value="WEB">Web Parser</option>
+                    <option value="JSON">Structured JSON Parser</option>
+                </select>
+            </div>
+
+            <div class="ai-toggle-container">
+                <input type="checkbox" id="run_ai" name="run_ai" style="transform: scale(1.2); cursor: pointer;">
+                <label for="run_ai" style="color: #00adb5; font-weight: bold; cursor: pointer; margin-left: 8px;">
+                    💡 Activate Local AI Coprocessor Analysis
+                </label>
+                <p style="font-size: 0.85em; margin: 8px 0 0 26px; color: #a0a0b0; line-height: 1.4;">
+                    Passes normalized log contexts downstream through a simulated local LLM sequence to evaluate hidden anomalies and extract semantic intent.
+                </p>
+            </div>
+
+            <button type="submit" class="btn">Deploy Parsing Analytics</button>
+        </form>
+    </div>
+
+    {% if run_analysis %}
+    <div class="card">
+        <h2>Analysis Metric Realization: <span style="color: #f4f4f9;">{{ filename }}</span></h2>
+        <p><strong>Identified Classification Routing Engine:</strong> <span style="color: #00adb5;">{{ log_type }}</span></p>
+        
+        <hr style="border: 0; border-top: 1px solid #4e5561; margin: 20px 0;">
+
+        <h3>Triggered Framework Incidents ({{ alerts|length }})</h3>
+        {% if not alerts %}
+            <p style="color: #4e9f3d; font-weight: bold; background: rgba(78, 159, 61, 0.1); padding: 12px; border-radius: 4px;">
+                [+] Ingestion cycle clean. Context profiles clear of static rule heuristic triggers.
+            </p>
+        {% else %}
+            {% for alert in alerts %}
+                <div class="alert-item severity-{{ alert.severity }}">
+                    <h4 style="margin: 0 0 8px 0;">{{ alert.title }} [<span style="font-size: 0.9em;">{{ alert.severity }}</span>]</h4>
+                    <p style="margin: 4px 0;"><strong>Culprit Actor Anchor:</strong> <code>{{ alert.source }}</code></p>
+                    <p style="margin: 4px 0; color: #cfcfd6;"><strong>Risk Rationalization:</strong> {{ alert.why_it_matters }}</p>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if ai_report %}
+        <div class="ai-report-box">
+            <pre>{{ ai_report }}</pre>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</body>
+</html>
