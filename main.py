@@ -28,14 +28,14 @@ def process_pipeline(file_path, manual_override=None):
     return alerts, log_type
 
 def main():
-    parser = argparse.ArgumentParser(description="OmniSIEM Extensible Parsing & Analytics Driver")
+    parser = argparse.ArgumentParser(description="SentinelLite Extensible Parsing & Analytics Driver")
     parser.add_argument("-f", "--file", required=True, help="Target capture log telemetry node path")
     parser.add_argument("-t", "--type", help="Manual structural override flag (PCAP, AUTH, WEB, JSON)")
     args = parser.parse_args()
 
     alerts, detected_as = process_pipeline(args.file, args.type)
     
-    print(f"\n================= OMNISIEM REPORT: [{len(alerts)}] INCIDENTS =================")
+    print(f"\n================= SentinelLite REPORT: [{len(alerts)}] INCIDENTS =================")
     for idx, alert in enumerate(alerts, 1):
         print(f"[{idx}] {alert['title']} - [{alert['severity']}]")
         print(f"    Source Vector: {alert['source']}")

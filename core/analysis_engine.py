@@ -1,16 +1,10 @@
 # core/analysis_engine.py
-from plugins.brute_force_plugin import BruteForcePlugin
-from plugins.port_scan_plugin import PortScanPlugin
-from plugins.volume_spike_plugin import VolumeSpikePlugin
+from plugins import ACTIVE_PLUGINS  # Leverages the new __init__.py registry layout
 
 class AnalysisEngine:
     def __init__(self):
-        # Explicit plugin matrix attachment architecture
-        self.plugins = [
-            BruteForcePlugin(),
-            PortScanPlugin(),
-            VolumeSpikePlugin()
-        ]
+        # Automatically registers any rules managed by the plugins package surface
+        self.plugins = ACTIVE_PLUGINS
 
     def execute_pipeline(self, normalized_events):
         compiled_alerts = []
