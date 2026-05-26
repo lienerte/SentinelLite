@@ -1,57 +1,72 @@
 """
-core/ai_analyzer.py - Functional AI Analysis Simulator
-Generates natural language incident summaries based on normalized log payloads.
+core/ai_analyzer.py - Live Local LLM Ingestion Connector
+Architected to bridge SentinelLite's normalized event telemetry to local models.
 """
-from collections import defaultdict
+import json
+import requests
 
 class AIIntegrationLayer:
     def __init__(self, use_local_ai=False):
         self.active = use_local_ai
+        # Default local engine listening port for Ollama instances
+        self.ollama_url = "http://localhost:11434/api/generate"
+        # Using llama3 as the dedicated security analyzer target
+        self.model_target = "llama3"
         
     def generate_incident_summary(self, normalized_events, detected_type):
         """
-        Simulates local LLM reasoning by evaluating the event array context 
-        and generating a markdown-formatted analytical response.
+        Pipes normalized event context strings to a local LLM inference boundary
+        and returns structured Markdown security assessments.
         """
         if not self.active:
             return None
 
-        # Gather basic operational stats for the prompt context
-        total_events = len(normalized_events)
-        source_ips = {e['src_ip'] for e in normalized_events if e['src_ip'] != '0.0.0.0'}
-        
-        # Simple cognitive simulation matching signature heuristics
-        suspected_vectors = []
-        payload_dump = " ".join([str(e['payload']) for e in normalized_events]).lower()
-        
-        if "failed password" in payload_dump or "auth_failed" in payload_dump:
-            suspected_vectors.append("Brute-Force Credential Stuffing")
-        if "get /show-tech" in payload_dump or "cisco-ios" in payload_dump:
-            suspected_vectors.append("Administrative Diagnostic Dump / Clear Text Log Data Exfiltration")
-        if "network_tcp" in payload_dump or "network_udp" in payload_dump:
-            # Check unique ports
-            ports = {e['target_port'] for e in normalized_events if e['target_port'] is not None}
-            if len(ports) >= 10:
-                suspected_vectors.append("Horizontal/Vertical Port Sweep Reconnaissance")
+        if not normalized_events:
+            return "### 🤖 Local AI Analyst Engine\n*Ingestion stream empty. No analytical matrix context available to evaluate.*"
 
-        # Generate the simulated local LLM response string
-        ai_markdown = f"### 🤖 Local AI Analyst Engine Triage Report\n\n"
-        ai_markdown += f"**Analysis Confidence:** High (Determined via structural log profiling)\n\n"
-        ai_markdown += f"#### Executive Summary:\n"
-        ai_markdown += f"After review of the {total_events} ingested entries categorized under the **{detected_type}** data format, "
+        # TRUNCATION STRATEGY: Sample the first 15 events to comfortably fit 
+        # inside standard local context windows while preserving execution speeds.
+        log_sample = normalized_events[:15]
         
-        if suspected_vectors:
-            ai_markdown += f"the system flagged strong behavioral indicators matching known malicious tactical plays: **{', '.join(suspected_vectors)}**.\n\n"
-            ai_markdown += f"#### Behavioral Observed Anomalies:\n"
-            ai_markdown += f"- **Actor Footprint:** Active anomalies mapping back to source node(s): `{', '.join(list(source_ips)[:3])}`.\n"
-            ai_markdown += f"- **Suspicious String Patterns:** Outlier payload strings detected inside the unstructured data arrays.\n\n"
-            ai_markdown += f"#### Recommended Containment Playbook:\n"
-            ai_markdown += "1. Enforce a network socket block on the offending source IP at the edge firewall boundary.\n"
-            ai_markdown += "2. Pivot into the internal identity directory to check if user sessions matching these timelines require a password reset token.\n"
-        else:
-            ai_markdown += "the traffic profiles match expected behavioral baselines. No outstanding anomalies, hidden backdoors, or credential extraction cycles were isolated within the sample window.\n\n"
-            ai_markdown += f"#### Diagnostic Parameters:\n"
-            ai_markdown += f"- Processed {len(source_ips)} distinct communicating network hosts cleanly.\n"
-            ai_markdown += "- Zero malicious string markers were flagged in the unstructured text payload fields."
+        # PROMPT ENGINEERING: Establish role definitions and strict response parameters
+        prompt = (
+            f"You are an expert SOC Analyst engine embedded inside the SentinelLite SIEM framework.\n"
+            f"Analyze the following normalized log data extracted from an input classified as: {detected_type}.\n"
+            f"Identify potential security incidents, horizontal or vertical scanning patterns, malicious intent, "
+            f"or operational errors. Provide an executive threat overview summary and basic remediation "
+            f"steps using clean Markdown styling.\n\n"
+            f"LOG DATA TO EVALUATE (JSON Format):\n{json.dumps(log_sample, indent=2)}"
+        )
 
-        return ai_markdown
+        try:
+            # Deliver synchronous POST transaction block to local socket loop
+            response = requests.post(
+                self.ollama_url,
+                json={
+                    "model": self.model_target, 
+                    "prompt": prompt, 
+                    "stream": False  # Return complete text block at once to simplify UI rendering
+                },
+                timeout=25  # Prevent slow inferences from locking up the UI thread indefinitely
+            )
+            
+            if response.status_code == 200:
+                # Extract response text straight out of Ollama's unified return object
+                return response.json().get("response")
+            else:
+                return (
+                    f"### 🤖 AI Core Exception\n"
+                    f"Local engine returned status code: `{response.status_code}`.\n"
+                    f"Verify that model tracking registers match target: `{self.model_target}`."
+                )
+                
+        except requests.exceptions.RequestException:
+            # Fallback error card providing user action options if the background server drops
+            return (
+                "### 🤖 Local AI Analyst Engine Triage Report\n\n"
+                "**Status:** Connection to Core Local LLM Refused\n\n"
+                "**Remediation Steps to Activate:**\n"
+                "1. Ensure the **Ollama** engine is actively running on your host machine.\n"
+                "2. Open a terminal and run `ollama run llama3` to confirm the model file is cached locally.\n"
+                "3. Re-execute the SentinelLite upload analyzer routine."
+            )
