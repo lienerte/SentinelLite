@@ -30,12 +30,22 @@ class AIIntegrationLayer:
         
         # PROMPT ENGINEERING: Establish role definitions and strict response parameters
         prompt = (
-            f"You are an expert SOC Analyst engine embedded inside the SentinelLite SIEM framework.\n"
-            f"Analyze the following normalized log data extracted from an input classified as: {detected_type}.\n"
-            f"Identify potential security incidents, horizontal or vertical scanning patterns, malicious intent, "
-            f"or operational errors. Provide an executive threat overview summary and basic remediation "
+            # Inside your AI prompt construction loop
+            f"You are an expert Principal SOC Analyst and Infrastructure Security Engineer. Analyze the provided "
+            f"normalized SIEM alert matrix with strict technical accuracy. Be precise and realistic.\n"
+            f"CRITICAL RULES:\n"
+            f"1. CONTEXTUAL REASONING: Differentiate between adversarial attacks and cleartext operational audits. "
+            f"A 'show-tech' command from a 'cisco-IOS' User-Agent indicates a benign network management tool, "
+            f"NOT an external hacker penetration attempt. The risk is strictly DATA LEAKAGE via cleartext transport.\n"
+            f"2. PROTOCOL SANITY CHECK: High volume TCP ACK ('A') packets inside a data stream are standard network "
+            f"acknowledgements for file/payload delivery, not automated scanning routines.\n"
+            f"3. SAFE REMEDIATION: Never suggest blocking critical baseline protocol behaviors like TCP ACK flags, "
+            f"as doing so disrupts legitimate state tracking and breaks active user connections. "
+            f"Focus remediation entirely on forcing protocol encapsulation (e.g., migrating HTTP to HTTPS/SSH), "
+            f"implementing network segmentation, or configuring restrictive management plane Access Control Lists (ACLs).\n\n"
+            f"Format your analysis professionally with an 'Executive Threat Overview Summary' and specific, actionable 'Remediation Steps'."
             f"steps using clean Markdown styling.\n\n"
-            f"LOG DATA TO EVALUATE (JSON Format):\n{json.dumps(log_sample, indent=2)}"
+            f"LOG DATA TO EVALUATE (JSON Format):\n{json.dumps(log_sample, indent=2)}"             
         )
 
         try:
