@@ -11,9 +11,7 @@
             color: #f4f4f9; 
             margin: 30px; 
         }
-        h1, h2, h3 { 
-            color: #00adb5; 
-        }
+        h1, h2, h3 { color: #00adb5; }
         .card { 
             background: #2a2a35; 
             padding: 25px; 
@@ -22,57 +20,64 @@
             margin-bottom: 25px; 
         }
         .btn { 
-            background-color: #00adb5; 
-            color: white; 
-            border: none; 
-            padding: 12px 24px; 
-            border-radius: 4px; 
-            font-weight: bold;
-            cursor: pointer; 
-            transition: background 0.2s;
+            background-color: #00adb5; color: white; border: none; 
+            padding: 12px 24px; border-radius: 4px; font-weight: bold;
+            cursor: pointer; transition: background 0.2s;
         }
-        .btn:hover {
-            background-color: #008f96;
-        }
+        .btn:hover { background-color: #008f96; }
         select, input[type="file"] {
-            background: #393e46;
-            color: #f4f4f9;
-            border: 1px solid #4e5561;
-            padding: 8px;
-            border-radius: 4px;
+            background: #393e46; color: #f4f4f9; border: 1px solid #4e5561;
+            padding: 8px; border-radius: 4px;
         }
         .ai-toggle-container {
-            margin: 20px 0; 
-            background: #222831; 
-            padding: 15px; 
-            border-radius: 6px;
-            border-left: 4px solid #00adb5;
+            margin: 20px 0; background: #222831; padding: 15px; 
+            border-radius: 6px; border-left: 4px solid #00adb5;
         }
+        
+        /* Progress Feedback Elements */
+        #progress-container {
+            display: none;
+            margin: 20px 0;
+        }
+        .progress-bar-bg {
+            background-color: #393e46;
+            border-radius: 4px;
+            overflow: hidden;
+            height: 12px;
+            width: 100%;
+        }
+        .progress-bar-fill {
+            background-color: #00adb5;
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 10px #00adb5;
+        }
+        #status-message {
+            color: #a0a0b0;
+            font-size: 0.9em;
+            margin-top: 6px;
+            font-style: italic;
+        }
+
+        /* Results Elements */
+        #results-container { display: none; }
         .alert-item { 
-            border-left: 5px solid #ff5722; 
-            background: #393e46; 
-            padding: 15px; 
-            margin: 15px 0; 
-            border-radius: 0 4px 4px 0; 
+            border-left: 5px solid #ff5722; background: #393e46; 
+            padding: 15px; margin: 15px 0; border-radius: 0 4px 4px 0; 
         }
         .severity-HIGH { border-color: #ff5722; } 
         .severity-MEDIUM { border-color: #f0a500; } 
         .severity-LOW { border-color: #3282b8; }
         
         .ai-report-box {
-            border: 1px solid #00adb5; 
-            background: #11141a; 
-            margin-top: 25px;
-            border-radius: 6px;
-            padding: 20px;
+            border: 1px solid #00adb5; background: #11141a; 
+            margin-top: 25px; border-radius: 6px; padding: 20px;
         }
         pre { 
             font-family: 'Consolas', 'Courier New', Courier, monospace; 
-            white-space: pre-wrap; 
-            color: #e1e1e6; 
-            font-size: 0.95em; 
-            line-height: 1.6;
-            margin: 0;
+            white-space: pre-wrap; color: #e1e1e6; font-size: 0.95em; 
+            line-height: 1.6; margin: 0;
         }
     </style>
 </head>
@@ -81,10 +86,10 @@
     
     <div class="card">
         <h2>Ingestion Console</h2>
-        <form method="post" enctype="multipart/form-data">
+        <form id="upload-form">
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Select Log/Capture File:</label>
-                <input type="file" name="file" required>
+                <input type="file" name="file" id="file-input" required>
             </div>
 
             <div style="margin-bottom: 15px;">
@@ -95,6 +100,7 @@
                     <option value="AUTH">Auth Parser</option>
                     <option value="WEB">Web Parser</option>
                     <option value="JSON">Structured JSON Parser</option>
+                    <option value="FORTINET_IPS">Fortinet IPS Parser</option>
                 </select>
             </div>
 
@@ -104,42 +110,150 @@
                     💡 Activate Local AI Coprocessor Analysis
                 </label>
                 <p style="font-size: 0.85em; margin: 8px 0 0 26px; color: #a0a0b0; line-height: 1.4;">
-                    Passes normalized log contexts downstream through a simulated local LLM sequence to evaluate hidden anomalies and extract semantic intent.
+                    Passes normalized log contexts downstream through a local LLM inference window to parse behavior intents.
                 </p>
             </div>
 
-            <button type="submit" class="btn">Deploy Parsing Analytics</button>
+            <button type="submit" class="btn" id="submit-btn">Deploy Parsing Analytics</button>
         </form>
+
+        <div id="progress-container">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            <div id="status-message">Initializing security telemetry validation layers...</div>
+        </div>
     </div>
 
-    {% if run_analysis %}
-    <div class="card">
-        <h2>Analysis Metric Realization: <span style="color: #f4f4f9;">{{ filename }}</span></h2>
-        <p><strong>Identified Classification Routing Engine:</strong> <span style="color: #00adb5;">{{ log_type }}</span></p>
+    <div class="card" id="results-container">
+        <h2>Analysis Metric Realization: <span id="res-filename" style="color: #f4f4f9;">-</span></h2>
+        <p><strong>Identified Classification Routing Engine:</strong> <span id="res-log-type" style="color: #00adb5;">-</span></p>
         
         <hr style="border: 0; border-top: 1px solid #4e5561; margin: 20px 0;">
 
-        <h3>Triggered Framework Incidents ({{ alerts|length }})</h3>
-        {% if not alerts %}
-            <p style="color: #4e9f3d; font-weight: bold; background: rgba(78, 159, 61, 0.1); padding: 12px; border-radius: 4px;">
-                [+] Ingestion cycle clean. Context profiles clear of static rule heuristic triggers.
-            </p>
-        {% else %}
-            {% for alert in alerts %}
-                <div class="alert-item severity-{{ alert.severity }}">
-                    <h4 style="margin: 0 0 8px 0;">{{ alert.title }} [<span style="font-size: 0.9em;">{{ alert.severity }}</span>]</h4>
-                    <p style="margin: 4px 0;"><strong>Culprit Actor Anchor:</strong> <code>{{ alert.source }}</code></p>
-                    <p style="margin: 4px 0; color: #cfcfd6;"><strong>Risk Rationalization:</strong> {{ alert.why_it_matters }}</p>
-                </div>
-            {% endfor %}
-        {% endif %}
+        <h3>Triggered Framework Incidents (<span id="res-alert-count">0</span>)</h3>
+        <div id="alerts-wrapper"></div>
 
-        {% if ai_report %}
-        <div class="ai-report-box">
-            <pre>{{ ai_report }}</pre>
+        <div class="ai-report-box" id="ai-report-wrapper" style="display: none;">
+            <pre id="res-ai-text"></pre>
         </div>
-        {% endif %}
     </div>
-    {% endif %}
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Intercept default page reload
+
+            const fileInput = document.getElementById('file-input');
+            const overrideType = document.getElementById('override_type').value;
+            const runAi = document.getElementById('run_ai').checked;
+            
+            if (!fileInput.files.length) return;
+
+            // Gather elements for layout manipulation
+            const submitBtn = document.getElementById('submit-btn');
+            const progressContainer = document.getElementById('progress-container');
+            const progressFill = document.getElementById('progress-fill');
+            const statusMessage = document.getElementById('status-message');
+            const resultsContainer = document.getElementById('results-container');
+            const alertsWrapper = document.getElementById('alerts-wrapper');
+            const aiReportWrapper = document.getElementById('ai-report-wrapper');
+
+            // Hide old results, lock button, and show loader
+            resultsContainer.style.display = 'none';
+            submitBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            
+            // Progress Stage 1: Local Ingestion and Normalization
+            progressFill.style.width = '25%';
+            statusMessage.innerText = "Parsing structural logs and mapping unified schema matrix arrays...";
+
+            // Pack form payload fields
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('override_type', overrideType);
+            formData.append('run_ai', runAi);
+
+            // Progress Stage 2: Handing off to Heuristic Engine
+            setTimeout(() => {
+                if(progressFill.style.width === '25%') {
+                    progressFill.style.width = '50%';
+                    statusMessage.innerText = "Executing signature lookup checks and calculating metrics...";
+                }
+            }, 800);
+
+            // Progress Stage 3: Running local LLM inference context matching (If toggled)
+            setTimeout(() => {
+                if(progressFill.style.width === '50%') {
+                    progressFill.style.width = '75%';
+                    statusMessage.innerText = runAi 
+                        ? "Local AI model engaged. Evaluating payload indicators (This may take several seconds)..."
+                        : "Finalizing ingestion tracking metrics...";
+                }
+            }, 1600);
+
+            try {
+                // Post asynchronous stream context straight into Flask background layer
+                const response = await fetch('/analyze-async', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error(data.error || "Ingestion pipeline crash encountered");
+
+                // Complete the progress animation sequence
+                progressFill.style.width = '100%';
+                statusMessage.innerText = "Analysis matrix generated successfully!";
+
+                // Populate Text Metrics inside the template layout
+                document.getElementById('res-filename').innerText = data.filename;
+                document.getElementById('res-log-type').innerText = data.log_type;
+                document.getElementById('res-alert-count').innerText = data.alerts.length;
+
+                // Build Static Alert Elements dynamically via JS loops
+                alertsWrapper.innerHTML = '';
+                if (data.alerts.length === 0) {
+                    alertsWrapper.innerHTML = `
+                        <p style="color: #4e9f3d; font-weight: bold; background: rgba(78, 159, 61, 0.1); padding: 12px; border-radius: 4px;">
+                            [+] Ingestion cycle clean. Context profiles clear of static rule heuristic triggers.
+                        </p>`;
+                } else {
+                    data.alerts.forEach(alert => {
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = `alert-item severity-${alert.severity}`;
+                        alertDiv.innerHTML = `
+                            <h4 style="margin: 0 0 8px 0;">${alert.title} [<span style="font-size: 0.9em;">${alert.severity}</span>]</h4>
+                            <p style="margin: 4px 0;"><strong>Culprit Actor Anchor:</strong> <code>${alert.source}</code></p>
+                            <p style="margin: 4px 0; color: #cfcfd6;"><strong>Risk Rationalization:</strong> ${alert.why_it_matters}</p>
+                        `;
+                        alertsWrapper.appendChild(alertDiv);
+                    });
+                }
+
+                // Render out AI Markdown output frame if data was populated
+                if (data.ai_report) {
+                    document.getElementById('res-ai-text').innerText = data.ai_report;
+                    aiReportWrapper.style.display = 'block';
+                } else {
+                    aiReportWrapper.style.display = 'none';
+                }
+
+                // Show the complete results card card layout gracefully
+                setTimeout(() => {
+                    resultsContainer.style.display = 'block';
+                    progressContainer.style.display = 'none';
+                    progressFill.style.width = '0%';
+                    submitBtn.disabled = false;
+                }, 400);
+
+            } catch (err) {
+                alert(`Error running analysis: ${err.message}`);
+                statusMessage.innerText = "Pipeline failure.";
+                progressFill.style.width = '0%';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
