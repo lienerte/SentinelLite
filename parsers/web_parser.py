@@ -9,12 +9,16 @@ class WebParser(BaseParser):
         
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             for line in f:
-                match = pattern.search(line)
-                if match:
-                    data = match.groupdict()
-                    events.append(self.normalize_event(
-                        timestamp=data['ts'], src_ip=data['ip'], dst_ip="0.0.0.0",
-                        target_port=80 if data['verb'] != "CONNECT" else 443, user=None,
-                        event_type=f"WEB_{data['status']}", payload=f"{data['verb']} {data['uri']}"
-                    ))
+                try:
+                    match = pattern.search(line)
+                    if match:
+                        data = match.groupdict()
+                        events.append(self.normalize_event(
+                            timestamp=data['ts'], src_ip=data['ip'], dst_ip="0.0.0.0",
+                            target_port=80 if data['verb'] != "CONNECT" else 443, user=None,
+                            event_type=f"WEB_{data['status']}", payload=f"{data['verb']} {data['uri']}"
+                        ))
+                except Exception as e:
+                    print(f"[!] Warning: Structural parsing bypass on line {line_num}: {e}")
+                    continue
         return events

@@ -15,24 +15,29 @@ class AuthParser(BaseParser):
         
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             for line in f:
-                clean_line = line.strip()
-                if not clean_line:
-                    continue
-                    
-                match = pattern.search(clean_line)
-                if match:
-                    data = match.groupdict()
-                    events.append(self.normalize_event(
-                        timestamp=data['ts'], 
-                        src_ip=data['ip'], 
-                        dst_ip="127.0.0.1",
-                        target_port=data['port'], 
-                        user=data['user'],
-                        event_type=f"AUTH_{data['status'].upper()}", 
-                        payload=clean_line
-                    ))
-                else:
-                    # Echo drops to terminal standard out to verify tracking mismatches
-                    print(f"[PARSER DEBUG] Regular expression failed to extract line fields: {clean_line}")
-                    
+                try:
+                    clean_line = line.strip()
+                    if not clean_line:
+                        continue
+                        
+                    match = pattern.search(clean_line)
+                    if match:
+                        data = match.groupdict()
+                        events.append(self.normalize_event(
+                            timestamp=data['ts'], 
+                            src_ip=data['ip'], 
+                            dst_ip="127.0.0.1",
+                            target_port=data['port'], 
+                            user=data['user'],
+                            event_type=f"AUTH_{data['status'].upper()}", 
+                            payload=clean_line
+                        ))
+                    else:
+                        # Echo drops to terminal standard out to verify tracking mismatches
+                        print(f"[PARSER DEBUG] Regular expression failed to extract line fields: {clean_line}")
+                except Exception as e:
+                    # Log the malformed line index but keep processing the rest of the stream
+                    print(f"[!] Warning: Structural parsing bypass on line {line_num}: {e}")
+                    continue   
+
         return events

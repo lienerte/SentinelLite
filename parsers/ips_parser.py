@@ -40,5 +40,6 @@ class IpsParser(BaseParser):
                     
         except Exception as e:
             print(f"[-] Parsing exception encountered inside IpsParser matrix: {e}")
+            continue
             
         return normalized_records

@@ -73,6 +73,7 @@ class MultiParser(BaseParser):
                             continue
                             
         except Exception as e:
-            print(f"[-] Processing breakdown inside MultiParser layer: {e}")
+            print(f"[!] Warning: Structural parsing bypass on line {line_num}: {e}")
+            continue
             
         return normalized_records

@@ -19,6 +19,7 @@ class JsonParser(BaseParser):
                         event_type=obj.get("event_type") or "JSON_RECORD",
                         payload=str(obj.get("message") or obj)
                     ))
-                except json.JSONDecodeError:
+                except Exception as e:
+                    print(f"[!] Warning: Structural parsing bypass on line {line_num}: {e}")
                     continue
         return events
