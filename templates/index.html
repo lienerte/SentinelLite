@@ -3,273 +3,537 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SentinelLite Operational Dashboard</title>
+    <title>SentinelLite // Modular SIEM Framework</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #1e1e24; 
-            color: #f4f4f9; 
-            margin: 30px; 
-        }
-        h1, h2, h3 { color: #00adb5; }
-        .card { 
-            background: #2a2a35; 
-            padding: 25px; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
-            margin-bottom: 25px; 
-        }
-        .btn { 
-            background-color: #00adb5; color: white; border: none; 
-            padding: 12px 24px; border-radius: 4px; font-weight: bold;
-            cursor: pointer; transition: background 0.2s;
-        }
-        .btn:hover { background-color: #008f96; }
-        select, input[type="file"] {
-            background: #393e46; color: #f4f4f9; border: 1px solid #4e5561;
-            padding: 8px; border-radius: 4px;
-        }
-        .ai-toggle-container {
-            margin: 20px 0; background: #222831; padding: 15px; 
-            border-radius: 6px; border-left: 4px solid #00adb5;
-        }
-        
-        /* Progress Feedback Elements */
-        #progress-container {
-            display: none;
-            margin: 20px 0;
-        }
-        .progress-bar-bg {
-            background-color: #393e46;
-            border-radius: 4px;
-            overflow: hidden;
-            height: 12px;
-            width: 100%;
-        }
-        .progress-bar-fill {
-            background-color: #00adb5;
-            height: 100%;
-            width: 0%;
-            transition: width 0.4s ease;
-            box-shadow: 0 0 10px #00adb5;
-        }
-        #status-message {
-            color: #a0a0b0;
-            font-size: 0.9em;
-            margin-top: 6px;
-            font-style: italic;
+        :root {
+            --bg-primary: #1a1c23;
+            --bg-secondary: #222831;
+            --bg-dark: #0f1015;
+            --accent-cyan: #00adb5;
+            --accent-orange: #ff5722;
+            --accent-green: #4e9f3d;
+            --text-light: #eeeeee;
+            --text-muted: #a0a0b0;
         }
 
-        /* Results Elements */
-        #results-container { display: none; }
-        .alert-item { 
-            border-left: 5px solid #ff5722; background: #393e46; 
-            padding: 15px; margin: 15px 0; border-radius: 0 4px 4px 0; 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
         }
-        .severity-HIGH { border-color: #ff5722; } 
-        .severity-MEDIUM { border-color: #f0a500; } 
-        .severity-LOW { border-color: #3282b8; }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            border-bottom: 2px solid var(--bg-secondary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        h1 { margin: 0; color: var(--accent-cyan); font-size: 2em; letter-spacing: -0.5px; }
+        .subtitle { margin: 5px 0 0 0; color: var(--text-muted); font-size: 0.95em; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        @media (min-width: 768px) {
+            .grid { grid-template-columns: 350px 1fr; }
+        }
+
+        .panel {
+            background-color: var(--bg-secondary);
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            height: fit-content;
+        }
+
+        .panel-title {
+            margin: 0 0 15px 0;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 8px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-size: 0.85em; color: var(--text-muted); font-weight: bold; }
         
-        .ai-report-box {
-            border: 1px solid #00adb5; background: #11141a; 
-            margin-top: 25px; border-radius: 6px; padding: 20px;
+        input[type="file"], select {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-dark);
+            border: 1px solid #393e46;
+            border-radius: 4px;
+            color: var(--text-light);
+            box-sizing: border-box;
+            font-size: 0.9em;
         }
-        pre { 
-            font-family: 'Consolas', 'Courier New', Courier, monospace; 
-            white-space: pre-wrap; color: #e1e1e6; font-size: 0.95em; 
-            line-height: 1.6; margin: 0;
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 18px 0;
+            cursor: pointer;
         }
+        .checkbox-group input { cursor: pointer; width: 16px; height: 16px; margin: 0; }
+
+        button {
+            width: 100%;
+            color: var(--bg-dark);
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        button:disabled { background-color: #393e46; color: var(--text-muted); cursor: not-allowed; opacity: 0.6; }
+
+        /* Progress Bar Matrix */
+        .progress-container {
+            display: none;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+            position: relative;
+            height: 20px;
+        }
+        .progress-fill {
+            background: var(--accent-cyan);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .status-message {
+            font-size: 0.8em;
+            color: var(--accent-cyan);
+            text-align: center;
+            margin-top: 6px;
+            font-family: monospace;
+        }
+
+        /* Results Pane Formatting */
+        .meta-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            background: var(--bg-dark);
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85em;
+            margin-bottom: 20px;
+        }
+        .meta-item span { color: var(--accent-cyan); font-weight: bold; }
+
+        .alert-item {
+            background: var(--bg-dark);
+            border-left: 4px solid #7f8c8d;
+            padding: 15px;
+            border-radius: 0 4px 4px 0;
+            margin-bottom: 12px;
+        }
+        .alert-item.severity-CRITICAL { border-left-color: var(--accent-orange); }
+        .alert-item.severity-HIGH { border-left-color: #e67e22; }
+        .alert-item.severity-MEDIUM { border-left-color: #f1c40f; }
+        .alert-item.severity-LOW { border-left-color: #34495e; }
+
+        .ai-card {
+            background: var(--bg-dark);
+            border-top: 3px solid var(--accent-cyan);
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 25px;
+        }
+        .ai-card h3 { margin: 0 0 12px 0; color: var(--accent-cyan); font-size: 1.1em; display: flex; align-items: center; gap: 8px; }
+        .ai-content { font-size: 0.95em; color: #cfcfd6; line-height: 1.6; }
+        .ai-content p { margin: 0 0 12px 0; }
+        .ai-content ul, .ai-content ol { margin: 0 0 12px 0; padding-left: 20px; }
+        .ai-content li { margin-bottom: 4px; }
+
+        pre { margin: 0; font-family: monospace; }
     </style>
 </head>
 <body>
-    <h1>SentinelLite Analytic Dashboard</h1>
-    
-    <div class="card">
-        <h2>Ingestion Console</h2>
-        <form id="upload-form">
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Select Log/Capture File:</label>
-                <input type="file" name="file" id="file-input" required>
+
+<div class="container">
+    <header>
+        <h1>SentinelLite</h1>
+        <div class="subtitle">Modular Security Information & Event Management Framework</div>
+    </header>
+
+    <div class="grid">
+        <aside class="panel">
+            <div class="panel-title" style="color: var(--accent-orange); border-bottom-color: rgba(255,87,34,0.2);">🔴 Live Operational Sniffer</div>
+            <div style="background: var(--bg-dark); padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 0.85em;">
+                <p style="margin: 0 0 10px 0; color: var(--text-muted);">Listen to live promiscuous network packet frames directly from the host socket interface.</p>
+                <div style="display: flex; gap: 10px;">
+                    <button id="start-live-btn" style="background: var(--accent-green); color: white; padding: 6px 12px; font-size: 0.85em; width: auto;" onclick="toggleLiveCapture(true)">Start Engine</button>
+                    <button id="stop-live-btn" style="background: #c0392b; color: white; padding: 6px 12px; font-size: 0.85em; width: auto;" onclick="toggleLiveCapture(false)" disabled>Stop</button>
+                    <button style="background: #34495e; color: white; padding: 6px 12px; font-size: 0.85em; width: auto;" onclick="clearLiveMetrics()">Clear</button>
+                </div>
+                <div id="live-status-text" style="font-family: monospace; font-size: 0.9em; margin-top: 8px; color: var(--text-muted);">Status: INACTIVE</div>
             </div>
 
-            <div style="margin-bottom: 15px;">
-                <label for="override_type" style="display: block; margin-bottom: 5px; font-weight: bold;">Force Structural Context Override:</label>
-                <select name="override_type" id="override_type">
-                    <option value="">Auto-Detect Framework Classifiers (Recommended)</option>
-                    <option value="MULTI">Force Override: Mixed Multi-Protocol Log Tracker</option>
-                    <option value="PCAP">Force Override: PCAP Parser</option>
-                    <option value="AUTH">Force Override: Auth Parser</option>
-                    <option value="WEB">Force Override: Web Parser</option>
-                    <option value="JSON">Force Override: Structured JSON Parser</option>
-                    <option value="FORTINET_IPS">Force Override: Fortinet IPS Parser</option>
-                </select>
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+
+            <div class="panel-title">Telemetry Ingestion</div>
+            <form id="upload-form">
+                <div class="form-group">
+                    <label for="file-input">Select Telemetry Artifact (PCAP, Syslog, Web)</label>
+                    <input type="file" id="file-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="override-select">Parsing Routing Execution</label>
+                    <select id="override-select">
+                        <option value="">Auto-Detect Framework Classifiers</option>
+                        <option value="PCAP">Force Override: Binary PCAP Parser</option>
+                        <option value="SYSLOG">Force Override: Syslog (Auth/SSHD) Parser</option>
+                        <option value="WEB">Force Override: Nginx Web Log Parser</option>
+                        <option value="JSON">Force Override: Structured JSON Parser</option>
+                    </select>
+                </div>
+
+                <div class="checkbox-group" id="ai-toggle-wrapper">
+                    <input type="checkbox" id="ai-checkbox" checked>
+                    <label for="ai-checkbox">Engage Local AI Analytical Coprocessor</label>
+                </div>
+
+                <button type="submit" id="submit-btn" style="background-color: var(--accent-cyan);">Deploy Parsing Analytics</button>
+            </form>
+
+            <div class="progress-container" id="progress-container">
+                <div class="progress-fill" id="progress-fill"></div>
             </div>
+            <div class="status-message" id="status-message"></div>
+        </aside>
 
-            <div class="ai-toggle-container">
-                <input type="checkbox" id="run_ai" name="run_ai" style="transform: scale(1.2); cursor: pointer;">
-                <label for="run_ai" style="color: #00adb5; font-weight: bold; cursor: pointer; margin-left: 8px;">
-                    💡 Activate Local AI Coprocessor Analysis
-                </label>
-                <p style="font-size: 0.85em; margin: 8px 0 0 26px; color: #a0a0b0; line-height: 1.4;">
-                    Passes normalized log contexts downstream through a local LLM inference window to parse behavior intents.
-                </p>
-            </div>
-
-            <button type="submit" class="btn" id="submit-btn">Deploy Parsing Analytics</button>
-        </form>
-
-        <div id="progress-container">
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="progress-fill"></div>
-            </div>
-            <div id="status-message">Initializing security telemetry validation layers...</div>
-        </div>
-    </div>
-
-    <div class="card" id="results-container">
-        <h2>Analysis Metric Realization: <span id="res-filename" style="color: #f4f4f9;">-</span></h2>
-        <p><strong>Identified Classification Routing Engine:</strong> <span id="res-log-type" style="color: #00adb5;">-</span></p>
-        
-        <hr style="border: 0; border-top: 1px solid #4e5561; margin: 20px 0;">
-
-        <h3>Triggered Framework Incidents (<span id="res-alert-count">0</span>)</h3>
-        <div id="alerts-wrapper"></div>
-
-        <div class="ai-report-box" id="ai-report-wrapper" style="display: none;">
-            <pre id="res-ai-text"></pre>
-        </div>
-    </div>
-
-    <script>
-        document.getElementById('upload-form').addEventListener('submit', async function(e) {
-            e.preventDefault(); // Intercept default page reload
-
-            const fileInput = document.getElementById('file-input');
-            const overrideType = document.getElementById('override_type').value;
-            const runAi = document.getElementById('run_ai').checked;
+        <main class="panel" style="min-height: 400px;">
+            <div class="panel-title">Analysis Matrix Realization</div>
             
-            if (!fileInput.files.length) return;
+            <div id="initial-placeholder" style="color: var(--text-muted); text-align: center; padding-top: 100px;">
+                <p style="font-size: 1.2em; margin: 0;">System Idle.</p>
+                <p style="font-size: 0.85em; margin: 5px 0 0 0;">Upload a diagnostic log file or engage the live sniffer interface loop.</p>
+            </div>
 
-            // Gather elements for layout manipulation
-            const submitBtn = document.getElementById('submit-btn');
-            const progressContainer = document.getElementById('progress-container');
-            const progressFill = document.getElementById('progress-fill');
-            const statusMessage = document.getElementById('status-message');
-            const resultsContainer = document.getElementById('results-container');
-            const alertsWrapper = document.getElementById('alerts-wrapper');
-            const aiReportWrapper = document.getElementById('ai-report-wrapper');
+            <div id="results-display" style="display: none;">
+                <div class="meta-strip">
+                    <div class="meta-item">Target: <span id="res-filename">N/A</span></div>
+                    <div class="meta-item">Active Engine: <span id="res-log-type">N/A</span></div>
+                    <div class="meta-item">Triggered Incidents: <span id="res-alert-count">0</span></div>
+                </div>
 
-            // Hide old results, lock button, and show loader
-            resultsContainer.style.display = 'none';
-            submitBtn.disabled = true;
-            progressContainer.style.display = 'block';
+                <div id="alerts-wrapper"></div>
+
+                <div class="ai-card" id="ai-report-wrapper">
+                    <h3>🤖 Local AI Analyst Engine</h3>
+                    <div class="ai-content" id="res-ai-text">Evaluating payload indicators...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    let livePollingInterval = null;
+
+    // -------------------------------------------------------------------------
+    // LIVE PACKET SNIFFER DASHBOARD CONTROL ENGINE
+    // -------------------------------------------------------------------------
+    async function toggleLiveCapture(enable) {
+        try {
+            // Stop any historical post-mortem uploads from running concurrent tasks
+            document.getElementById('upload-form').reset();
             
-            // Progress Stage 1: Local Ingestion and Normalization
-            progressFill.style.width = '25%';
-            statusMessage.innerText = "Parsing structural logs and mapping unified schema matrix arrays...";
-
-            // Pack form payload fields
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('override_type', overrideType);
-            formData.append('run_ai', runAi);
-
-            // Progress Stage 2: Handing off to Heuristic Engine
-            setTimeout(() => {
-                if(progressFill.style.width === '25%') {
-                    progressFill.style.width = '50%';
-                    statusMessage.innerText = "Executing signature lookup checks and calculating metrics...";
-                }
-            }, 800);
-
-            // Progress Stage 3: Running local LLM inference context matching (If toggled)
-            setTimeout(() => {
-                if(progressFill.style.width === '50%') {
-                    progressFill.style.width = '75%';
-                    statusMessage.innerText = runAi 
-                        ? "Local AI model engaged. Evaluating payload indicators (This may take several seconds)..."
-                        : "Finalizing ingestion tracking metrics...";
-                }
-            }, 1600);
-
-            try {
-                const response = await fetch('/analyze-async', {
-                    method: 'POST',
-                    body: formData
-                });
+            const response = await fetch('/live-sniffer/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enable: enable })
+            });
+            const data = await response.json();
+            
+            document.getElementById('start-live-btn').disabled = enable;
+            document.getElementById('stop-live-btn').disabled = !enable;
+            const statusText = document.getElementById('live-status-text');
+            
+            if (enable) {
+                statusText.innerText = "Status: ACTIVE & SNIFFING...";
+                statusText.style.color = "var(--accent-orange)";
                 
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error || "Ingestion pipeline crash encountered");
+                // Transition interface state display bounds
+                document.getElementById('initial-placeholder').style.display = 'none';
+                document.getElementById('results-display').style.display = 'block';
+                document.getElementById('res-filename').innerText = "[LIVE WIRE CAPTURE]";
+                document.getElementById('res-log-type').innerText = "LIVE_PCAP_SNIFFER";
+                document.getElementById('ai-report-wrapper').style.display = 'none'; // Sniffers pass raw metrics instead of blocking models
+                
+                // Bootstrap real-time stream polling matrix intervals
+                livePollingInterval = setInterval(pollLiveAlerts, 1500);
+            } else {
+                statusText.innerText = "Status: PAUSED";
+                statusText.style.color = "var(--text-muted)";
+                clearInterval(livePollingInterval);
+            }
+        } catch (err) {
+            alert(`Live Engine Socket Failure: ${err.message}`);
+        }
+    }
 
-                progressFill.style.width = '100%';
-                statusMessage.innerText = "Analysis matrix generated successfully!";
+    async function pollLiveAlerts() {
+        try {
+            const response = await fetch('/live-sniffer/alerts');
+            const data = await response.json();
+            
+            const alertsWrapper = document.getElementById('alerts-wrapper');
+            document.getElementById('res-alert-count').innerText = data.alerts ? data.alerts.length : 0;
 
-                // Update baseline text fields
-                document.getElementById('res-filename').innerText = data.filename;
-                document.getElementById('res-log-type').innerText = data.log_type;
-                document.getElementById('res-alert-count').innerText = data.alerts.length;
+            // Manage on-demand live playbook rendering markers
+            const clearExistingPlaybook = document.getElementById('live-playbook-card');
+            if (clearExistingPlaybook) clearExistingPlaybook.remove();
+            
+            if (data.playbook_compiled) {
+                const playbookPanel = document.createElement('div');
+                playbookPanel.id = "live-playbook-card";
+                playbookPanel.style.background = 'var(--bg-primary)';
+                playbookPanel.style.border = '1px dashed var(--accent-orange)';
+                playbookPanel.style.padding = '15px';
+                playbookPanel.style.borderRadius = '6px';
+                playbookPanel.style.marginBottom = '18px';
+                playbookPanel.innerHTML = `
+                    <h4 style="color: var(--accent-orange); margin: 0 0 8px 0;">📋 Live Mitigation Playbook Hot-Compiled</h4>
+                    <p style="margin: 0 0 8px 0; font-size: 0.9em;">Active threats hitting live sockets generated manual terminal remediation sequences.</p>
+                    <p style="margin: 0; font-size: 0.85em; color: var(--text-muted);"><strong>Target Path:</strong> <code style="color: var(--accent-orange)">artifacts/live_remediation_playbook.txt</code></p>
+                `;
+                alertsWrapper.insertBefore(playbookPanel, alertsWrapper.firstChild);
+            }
 
-                // Reset the alert wrapper output
-                alertsWrapper.innerHTML = '';
+            // Flush old volatile signature representations to prevent infinite vertical stacking loops
+            const activeCards = alertsWrapper.querySelectorAll('.alert-item');
+            activeCards.forEach(c => c.remove());
 
-                // 1. EVALUATE MISMATCH WARN STATE FIRST
-                if (data.mismatch_detected) {
-                    alertsWrapper.innerHTML = `
-                        <div style="border: 2px dashed #f0a500; background: rgba(240, 165, 0, 0.1); padding: 18px; border-radius: 6px; margin: 15px 0;">
-                            <h4 style="color: #f0a500; margin: 0 0 8px 0; font-size: 1.1em;">⚠ Structural Boundary Override Mismatch Warning</h4>
-                            <p style="margin: 4px 0; line-height: 1.4;">
-                                You forced execution context routing: <code style="background: #222831; padding: 2px 6px; border-radius: 4px; color: #ff5722;">${data.log_type}</code>.<br>
-                                However, the automated ingestion classifier fingerprinted this file as: <code style="background: #222831; padding: 2px 6px; border-radius: 4px; color: #00adb5;">${data.auto_detect_type}</code>.
-                            </p>
-                            <p style="margin: 8px 0 0 0; font-size: 0.9em; color: #a0a0b0; font-style: italic;">
-                                Notice: Extracted telemetry loops yielded ${data.alerts.length} static incident markers. If this output seems unusually sparse, revert your selection block back to "Auto-Detect Framework Classifiers".
-                            </p>
-                        </div>`;
-                } 
-                // 2. Standard Clean State (Only displays if it genuinely passed classification cleanly)
-                else if (data.alerts.length === 0) {
-                    alertsWrapper.innerHTML = `
-                        <p style="color: #4e9f3d; font-weight: bold; background: rgba(78, 159, 61, 0.1); padding: 12px; border-radius: 4px;">
-                            [+] Ingestion cycle clean. Context profiles clear of static rule heuristic triggers.
-                        </p>`;
+            if (data.alerts && data.alerts.length > 0) {
+                data.alerts.forEach(alert => {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = `alert-item severity-${alert.severity}`;
+                    alertDiv.innerHTML = `
+                        <h4 style="margin: 0 0 8px 0; font-size: 1.05em;">${alert.title} [${alert.severity}]</h4>
+                        <p style="margin: 4px 0; font-size: 0.9em;"><strong>Live Culprit Node:</strong> <code>${alert.source}</code></p>
+                        <p style="margin: 6px 0 0 0; color: var(--text-muted); font-size: 0.9em;"><strong>Risk Rationalization:</strong> ${alert.why_it_matters}</p>
+                    `;
+                    alertsWrapper.appendChild(alertDiv);
+                });
+            } else {
+                const cleanMsg = document.createElement('div');
+                cleanMsg.className = "alert-item";
+                cleanMsg.style.borderLeftColor = "var(--accent-green)";
+                cleanMsg.innerHTML = `<p style="color: var(--accent-green); font-weight: bold; margin:0;">[+] Monitoring socket boundaries. No signatures matched on active wire frames.</p>`;
+                alertsWrapper.appendChild(cleanMsg);
+            }
+        } catch (e) {
+            console.error("Error connecting to live server telemetry socket:", e);
+        }
+    }
+
+    async function clearLiveMetrics() {
+        clearInterval(livePollingInterval);
+        await fetch('/live-sniffer/clear', { method: 'POST' });
+        document.getElementById('alerts-wrapper').innerHTML = '';
+        document.getElementById('res-alert-count').innerText = '0';
+        toggleLiveCapture(false);
+    }
+
+    // -------------------------------------------------------------------------
+    // HISTORICAL FILE INGESTION PIPELINE MANAGEMENT
+    // -------------------------------------------------------------------------
+    document.getElementById('upload-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Safety shutdown for live streams if a file upload is launched
+        if (livePollingInterval) toggleLiveCapture(false);
+
+        const fileInput = document.getElementById('file-input');
+        const overrideSelect = document.getElementById('override-select');
+        const aiCheckbox = document.getElementById('ai-checkbox');
+        const submitBtn = document.getElementById('submit-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressFill = document.getElementById('progress-fill');
+        const statusMessage = document.getElementById('status-message');
+        
+        const placeholder = document.getElementById('initial-placeholder');
+        const resultsDisplay = document.getElementById('results-display');
+        const alertsWrapper = document.getElementById('alerts-wrapper');
+        const aiReportWrapper = document.getElementById('ai-report-wrapper');
+
+        if (!fileInput.files.length) return;
+
+        // UI Lockdown State
+        submitBtn.disabled = true;
+        placeholder.style.display = 'none';
+        resultsDisplay.style.display = 'block';
+        alertsWrapper.innerHTML = '';
+        aiReportWrapper.style.display = 'none';
+        
+        progressContainer.style.display = 'block';
+        progressFill.style.width = '10%';
+        statusMessage.innerText = "Initializing file ingestion pipeline...";
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('override_type', overrideSelect.value);
+        formData.append('run_ai', aiCheckbox.checked);
+
+        // Progress Ticker Loop Simulation
+        let progress = 10;
+        const progressInterval = setInterval(() => {
+            if (progress < 85) {
+                progress += Math.floor(Math.random() * 8) + 3;
+                if (progress > 85) progress = 85;
+                progressFill.style.width = `${progress}%`;
+                
+                if (progress < 35) {
+                    statusMessage.innerText = "Applying data structure parsing models...";
+                } else if (progress < 65) {
+                    statusMessage.innerText = "Executing pluggable cross-protocol signature matrices...";
+                } else {
+                    statusMessage.innerText = aiCheckbox.checked ? 
+                        "Local AI model engaged. Evaluating payload indicators (takes a moment)..." : 
+                        "Finalizing analytical telemetry data...";
+                }
+            }
+        }, 400);
+
+        try {
+            const response = await fetch('/analyze-async', {
+                method: 'POST',
+                body: formData
+            });
+            
+            clearInterval(progressInterval);
+            if (!response.ok) throw new Error(`Pipeline HTTP status breakage: ${response.status}`);
+
+            const data = await response.json();
+
+            progressFill.style.width = '100%';
+            statusMessage.innerText = "Analysis matrix completed.";
+
+            document.getElementById('res-filename').innerText = data.filename;
+            document.getElementById('res-log-type').innerText = data.log_type;
+            document.getElementById('res-alert-count').innerText = data.alerts ? data.alerts.length : 0;
+
+            // 1. BOUNDARY CHECK: Mismatch resulted in empty context structures
+            if (data.mismatch_detected && (!data.alerts || data.alerts.length === 0) && (!data.ai_report || data.ai_report.includes("Ingestion stream empty"))) {
+                alertsWrapper.innerHTML = `
+                    <div style="border: 2px dashed #ff5722; background: rgba(255, 87, 34, 0.1); padding: 20px; border-radius: 6px; margin: 15px 0;">
+                        <h4 style="color: #ff5722; margin: 0 0 8px 0; font-size: 1.15em;">❌ Ingestion Blocked: Total Parser Incompatibility</h4>
+                        <p style="margin: 4px 0; line-height: 1.5;">
+                            You forced execution routing to the <code style="background: #0f1015; padding: 2px 6px; border-radius: 4px; color: #ff5722;">${data.log_type}</code> engine.<br>
+                            Because this file actually contains <code style="background: #0f1015; padding: 2px 6px; border-radius: 4px; color: #00adb5;">${data.auto_detect_type}</code> syntax, the selected parser could not normalize a single line of data.
+                        </p>
+                        <p style="margin: 12px 0 0 0; color: #eeeeee; font-weight: bold;">Remediation:</p>
+                        <ul style="margin: 5px 0 0 0; padding-left: 20px; color: var(--text-muted); line-height: 1.4;">
+                            <li>Change the dropdown configuration back to <strong>"Auto-Detect Framework Classifiers"</strong>.</li>
+                            <li>Ensure the file structural content matches the schema you are trying to force.</li>
+                        </ul>
+                    </div>`;
+                aiReportWrapper.style.display = 'none';
+            } 
+            else {
+                // 2. CASE: Advisory On-Demand Playbook Rendering
+                if (data.playbook_meta && data.playbook_meta.file_created) {
+                    const playbookPanel = document.createElement('div');
+                    playbookPanel.style.background = 'var(--bg-primary)';
+                    playbookPanel.style.border = '1px dashed var(--accent-cyan)';
+                    playbookPanel.style.padding = '15px';
+                    playbookPanel.style.borderRadius = '6px';
+                    playbookPanel.style.marginBottom = '18px';
+                    
+                    playbookPanel.innerHTML = `
+                        <h4 style="color: var(--accent-cyan); margin: 0 0 8px 0; display: flex; align-items: center; gap: 6px;">
+                            📋 On-Demand Remediation Playbook Compiled
+                        </h4>
+                        <p style="margin: 0 0 10px 0; font-size: 0.9em; color: var(--text-light);">
+                            SentinelLite has formulated an explicit security mitigation script file containing <strong>${data.playbook_meta.actionable_targets}</strong> actionable infrastructure targets. 
+                            Review and execute these configuration changes manually if desired:
+                        </p>
+                        <p style="margin: 0; font-size: 0.85em; color: var(--text-muted);">
+                            <strong>Local Storage Artifact Path:</strong> <code style="color: var(--accent-cyan); background: var(--bg-dark); padding: 2px 6px; border-radius: 4px;">${data.playbook_meta.output_path}</code>
+                        </p>
+                    `;
+                    alertsWrapper.appendChild(playbookPanel);
                 }
 
-                // 3. Populate any generated signatures/rules alerts below the warning card
-                if (data.alerts.length > 0) {
+                // 3. CASE: Standard Mismatch Non-fatal Warnings
+                if (data.mismatch_detected) {
+                    const warnDiv = document.createElement('div');
+                    warnDiv.style.border = '1px dashed var(--accent-orange)';
+                    warnDiv.style.background = 'rgba(255, 87, 34, 0.05)';
+                    warnDiv.style.padding = '12px';
+                    warnDiv.style.borderRadius = '4px';
+                    warnDiv.style.marginBottom = '15px';
+                    warnDiv.style.fontSize = '0.9em';
+                    warnDiv.innerHTML = `⚠ <strong>Structural Boundary Override Mismatch:</strong> Forced <code>${data.log_type}</code> parser but structural classifier identified file as <code>${data.auto_detect_type}</code>. Displaying salvaged telemetry records.`;
+                    alertsWrapper.appendChild(warnDiv);
+                }
+
+                // Render out standard signature incident iterations
+                if (data.alerts && data.alerts.length > 0) {
                     data.alerts.forEach(alert => {
                         const alertDiv = document.createElement('div');
                         alertDiv.className = `alert-item severity-${alert.severity}`;
                         alertDiv.innerHTML = `
-                            <h4 style="margin: 0 0 8px 0;">${alert.title} [<span style="font-size: 0.9em;">${alert.severity}</span>]</h4>
-                            <p style="margin: 4px 0;"><strong>Culprit Actor Anchor:</strong> <code>${alert.source}</code></p>
-                            <p style="margin: 4px 0; color: #cfcfd6;"><strong>Risk Rationalization:</strong> ${alert.why_it_matters}</p>
+                            <h4 style="margin: 0 0 8px 0; font-size: 1.05em;">${alert.title} [${alert.severity}]</h4>
+                            <p style="margin: 4px 0; font-size: 0.9em;"><strong>Culprit Actor Anchor:</strong> <code>${alert.source}</code></p>
+                            <p style="margin: 6px 0 0 0; color: var(--text-muted); font-size: 0.9em;"><strong>Risk Rationalization:</strong> ${alert.why_it_matters}</p>
                         `;
                         alertsWrapper.appendChild(alertDiv);
                     });
-                }
-
-                // Handle downstream AI presentation container mapping
-                if (data.ai_report) {
-                    document.getElementById('res-ai-text').innerText = data.ai_report;
-                    aiReportWrapper.style.display = 'block';
                 } else {
-                    aiReportWrapper.style.display = 'none';
+                    alertsWrapper.innerHTML += `
+                        <div class="alert-item" style="border-left-color: var(--accent-green); background: rgba(78, 159, 61, 0.05)">
+                            <p style="color: var(--accent-green); font-weight: bold; margin: 0; font-size: 0.9em;">
+                                [+] Ingestion cycle clean. Context profiles clear of static rule heuristic triggers.
+                            </p>
+                        </div>`;
                 }
 
-                setTimeout(() => {
-                    resultsContainer.style.display = 'block';
-                    progressContainer.style.display = 'none';
-                    progressFill.style.width = '0%';
-                    submitBtn.disabled = false;
-                }, 400);
-
-            } catch (err) {
-                alert(`Error running analysis: ${err.message}`);
-                statusMessage.innerText = "Pipeline failure.";
-                progressFill.style.width = '0%';
-                submitBtn.disabled = false;
+                // Append local AI Coprocessor response metrics
+                if (aiCheckbox.checked && data.ai_report && !data.ai_report.includes("Ingestion stream empty")) {
+                    let formattedText = data.ai_report
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/^\*\s(.*)$/gm, '<li>$1</li>')
+                        .replace(/^\d\.\s(.*)$/gm, '<li>$1</li>')
+                        .replace(/\n/g, '<br>');
+                    
+                    document.getElementById('res-ai-text').innerHTML = formattedText;
+                    aiReportWrapper.style.display = 'block';
+                }
             }
-        });
-    </script>
+
+        } catch (error) {
+            clearInterval(progressInterval);
+            statusMessage.innerText = "Pipeline process execution crashed.";
+            alert(`Execution Error: ${error.message}`);
+        } finally {
+            submitBtn.disabled = false;
+            setTimeout(() => { progressContainer.style.display = 'none'; }, 1000);
+        }
+    });
+</script>
 </body>
 </html>

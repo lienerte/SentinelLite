@@ -1,0 +1,19 @@
+================================================================================
+🛡️  SENTINELLITE ON-DEMAND REMEDIATION PLAYBOOK
+Generated:   2026-05-25 23:21:17
+Target Log:  sample_auth.log
+Status:      PENDING ADMINISTRATIVE REVIEW (MANUAL EXECUTION ONLY)
+================================================================================
+
+This document provides point-and-click mitigation operations compiled specifically
+from the structural indicators extracted during the active parsing cycle.
+
+[1] INCIDENT TIER: HIGH | TRIGGER RULE: R01_AUTH_BRUTE_FORCE
+    Symptom Summary: Credential Access: High Authentication Failures
+    Target Actor Host: 10.0.0.99
+
+    👉 MANDATORY REMEDIATION COMMANDS (Copy & Paste to Server Terminal):
+        # Restrict standard port connectivity for the target host node
+        sudo iptables -A INPUT -s 10.0.0.99 -p tcp --dport 22 -j REJECT
+
+--------------------------------------------------------------------------------

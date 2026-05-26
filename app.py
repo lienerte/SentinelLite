@@ -1,22 +1,42 @@
-# app.py (Updated for Asynchronous Processing)
-from flask import Flask, render_template, request, jsonify
+# app.py
+"""
+app.py - Primary SentinelLite Control Surface
+Orchestrates the entire asynchronous SIEM pipeline: Ingestion, Triage, 
+Normalization, Threat Rule Correlation, Manual Playbook Compilation, and Local AI Inference.
+"""
 import os
-from core import LogClassifier, ParserFactory, AnalysisEngine, AIIntegrationLayer
+from flask import Flask, render_template, request, jsonify
+
+# Core System Structural Imports
+from core.log_classifier import LogClassifier
+from core.parser_factory import ParserFactory
+from core.analysis_engine import AnalysisEngine
+from core.remediation_orchestrator import RemediationOrchestrator
+from core.ai_analyzer import AIIntegrationLayer
+from core.live_sniffer import LiveSnifferManager, LIVE_ALERT_CACHE, LIVE_SNIFFER_ACTIVE
 
 app = Flask(__name__)
-UPLOAD_FOLDER = './uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Pipeline Environment Parameters
+UPLOAD_FOLDER = "uploads"
+ARTIFACT_FOLDER = "artifacts"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-@app.route('/', methods=['GET'])
-def index():
-    # Instantly renders the clean dashboard frame without any processing lag
-    return render_template('index.html', run_analysis=False)
+# Ensure processing directories exist on local disk initialization
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(ARTIFACT_FOLDER, exist_ok=True)
 
-# inside app.py
+@app.route('/')
+def index():
+    """Renders the central unified security orchestration dashboard."""
+    return render_template('index.html')
 
 @app.route('/analyze-async', methods=['POST'])
 def analyze_async():
+    """
+    Asynchronously processes uploaded network/syslog telemetry payloads.
+    Protects user experience matrix using distinct execution boundaries.
+    """
     if 'file' not in request.files:
         return jsonify({"error": "No file payload detected"}), 400
         
@@ -25,27 +45,29 @@ def analyze_async():
         return jsonify({"error": "No selected file name found"}), 400
         
     try:
+        # Commit file payload safely to disk storage
         save_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(save_path)
         
+        # Extract UI request configuration state values
         override_type = request.form.get('override_type') or None
         run_ai_checkbox = request.form.get('run_ai') == 'true'
 
-        # Run auto-detect behind the scenes to establish a baseline truth
+        # 1. Triage Phase: Run auto-detect to establish baseline file truth
         auto_detected_type, _ = LogClassifier.classify(save_path)
         
-        # Decide which routing tag to execute
+        # Decide which routing tag to execute based on dropdown state
         if override_type:
             log_type = override_type.upper()
         else:
             log_type = auto_detected_type
             
-        # Determine if a validation mismatch occurred
-        # (Ignore mismatch if override matches auto, or if auto is UNKNOWN but user tried to force a type)
+        # 2. Validation Boundary: Check for explicit parser mismatch states
         mismatch_detected = False
         if override_type and auto_detected_type != "UNKNOWN" and override_type.upper() != auto_detected_type:
             mismatch_detected = True
 
+        # Intercept complete parsing breakages before initializing pipelines
         if log_type == "UNKNOWN":
             return jsonify({
                 "filename": file.filename,
@@ -53,31 +75,82 @@ def analyze_async():
                 "auto_detect_type": auto_detected_type,
                 "mismatch_detected": False,
                 "alerts": [],
+                "playbook_meta": None,
                 "ai_report": "### 🤖 Ingestion Error\nFramework parsing skipped: Unrecognized file structural fingerprints."
             })
 
-        # Process through normal engineering pipeline steps
+        # 3. Normalization Phase: Resolve factory object and parse bytes to schema dictionaries
         parser = ParserFactory.get_parser(log_type)
         events = parser.parse(save_path)
 
+        # 4. Correlation Phase: Spin up the rule engine matrix across active plugins
         engine = AnalysisEngine()
         alerts = engine.execute_pipeline(events)
 
+        # 5. SOAR Advisory Phase: Compile point-and-click mitigation instructions if threats exist
+        soar_engine = RemediationOrchestrator()
+        playbook_meta = soar_engine.generate_playbook(alerts, file.filename)
+
+        # 6. Generative Coprocessor Phase: Pass context arrays downstream to local LLM
         ai_layer = AIIntegrationLayer(use_local_ai=run_ai_checkbox)
         ai_report = ai_layer.generate_incident_summary(events, log_type)
 
-        # Pack payload returning the mismatch context parameters
+        # Return full payload synchronization mapping back to frontend JavaScript renderer
         return jsonify({
             "filename": file.filename,
             "log_type": log_type,
             "auto_detect_type": auto_detected_type,
             "mismatch_detected": mismatch_detected,
             "alerts": alerts,
+            "playbook_meta": playbook_meta,
             "ai_report": ai_report
         })
 
     except Exception as e:
+        print(f"[-] Catastrophic pipeline breakdown inside app.py loop: {e}")
         return jsonify({"error": f"Internal pipeline exception: {str(e)}"}), 500
 
+@app.route('/live-sniffer/toggle', methods=['POST'])
+def toggle_live_sniffer():
+    """Starts or stops the background live telemetry worker threads."""
+    global LIVE_SNIFFER_ACTIVE
+    data = request.get_json() or {}
+    enable = data.get("enable", False)
+
+    # Initialize manager wrapper instance (None defaults to primary system interface)
+    sniffer = LiveSnifferManager()
+
+    if enable and not LIVE_SNIFFER_ACTIVE:
+        sniffer.start()
+        return jsonify({"status": "running", "message": "Live packet capture engine deployed successfully."})
+    elif not enable and LIVE_SNIFFER_ACTIVE:
+        sniffer.stop()
+        return jsonify({"status": "stopped", "message": "Live sniffer paused."})
+        
+    return jsonify({"status": "no_change", "running": LIVE_SNIFFER_ACTIVE})
+
+@app.route('/live-sniffer/alerts', methods=['GET'])
+def get_live_alerts():
+    """Endpoint for frontend polling loop to pull newly caught live threats."""
+    return jsonify({
+        "sniffer_active": LIVE_SNIFFER_ACTIVE,
+        "alerts": LIVE_ALERT_CACHE,
+        # Check if the playbook file exists to inform the UI panel
+        "playbook_compiled": os.path.exists("artifacts/live_remediation_playbook.txt")
+    })
+
+@app.route('/live-sniffer/clear', methods=['POST'])
+def clear_live_cache():
+    """Clears the current volatile memory alert array index."""
+    global LIVE_ALERT_CACHE
+    LIVE_ALERT_CACHE.clear()
+    if os.path.exists("artifacts/live_remediation_playbook.txt"):
+        try:
+            os.remove("artifacts/live_remediation_playbook.txt")
+        except OSError:
+            pass
+    return jsonify({"status": "cleared"})
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Initialize development server boundary on standard port structure
+    app.run(debug=True, host='127.0.0.1', port=5000)
