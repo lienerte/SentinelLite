@@ -9,11 +9,11 @@ SentinelLite is a lightweight, high-performance, format-agnostic SIEM and log an
 ```mermaid
 graph TD
     %% Define Styles & Palette
-    classDef source fill:#1a1c23,stroke:#7f8c8d,stroke-width:2px,color:#fff;
-    classDef core fill:#2c3e50,stroke:#00adb5,stroke-width:2px,color:#fff;
-    classDef logic fill:#1f4068,stroke:#16c79a,stroke-width:2px,color:#fff;
-    classDef layman fill:#34495e,stroke:#bdc3c7,stroke-width:1px,style:dashed,color:#ecf0f1;
-    classDef analyst fill:#2d132c,stroke:#ff5722,stroke-width:2px,color:#fff;
+    classDef source fill:#1a1c23,stroke:#7f8c8d,stroke-width:2px,color:#fff
+    classDef core fill:#2c3e50,stroke:#00adb5,stroke-width:2px,color:#fff
+    classDef logic fill:#1f4068,stroke:#16c79a,stroke-width:2px,color:#fff
+    classDef layman fill:#34495e,stroke:#bdc3c7,stroke-width:1px,style:dashed,color:#ecf0f1
+    classDef analyst fill:#2d132c,stroke:#ff5722,stroke-width:2px,color:#fff
 
     %% Data Pipeline Nodes
     A[Raw Telemetry Ingestion<br>e.g., mimikatz_test.txt] --> B(Engine Ingestion Layer)
@@ -50,11 +50,11 @@ graph TD
     N --> O
 
     %% Apply Classes to Node Blocks
-    class A,B source;
-    class C,D,E core;
-    class G,M logic;
-    class H,H1,H2 layman;
-    class I,J,K,L,N analyst;
+    class A,B source
+    class C,D,E core
+    class G,M logic
+    class H,H1,H2 layman
+    class I,J,K,L,N analyst
 ---
 
 ## 🚀 Key Architectural Layers
