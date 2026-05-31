@@ -127,7 +127,7 @@
             font-family: monospace;
         }
 
-        /* Metrics Grid Formatting */
+        /* Metrics Strip Formatting */
         .meta-strip {
             display: flex;
             flex-wrap: wrap;
@@ -166,9 +166,26 @@
         .ai-content ul, .ai-content ol { margin: 0 0 12px 0; padding-left: 20px; }
         .ai-content li { margin-bottom: 4px; }
 
+        /* Collapsible Advanced Visibility Components */
+        .advanced-toggle-header {
+            background: #2d323f;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            user-select: none;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .advanced-toggle-header:hover { background: #353b49; }
+        .collapsible-content { display: none; }
+
         pre { margin: 0; font-family: monospace; }
 
-        /* Responsive Visualization Row Configuration */
         @media (min-width: 992px) {
             #analytics-visualization-row {
                 grid-template-columns: 2fr 1fr !important;
@@ -186,18 +203,21 @@
 
     <div class="grid">
         <aside class="panel">
-            <div class="panel-title" style="color: var(--accent-orange); border-bottom-color: rgba(255,87,34,0.2);">🔴 Live Operational Sniffer</div>
-            <div style="background: var(--bg-dark); padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 0.85em;">
-                <p style="margin: 0 0 10px 0; color: var(--text-muted);">Listen to live promiscuous network packet frames directly from the host socket interface.</p>
-                <div style="display: flex; gap: 10px;">
-                    <button id="start-live-btn" style="background: var(--accent-green); color: white; padding: 6px 12px; font-size: 0.85em; width: auto;" onclick="toggleLiveCapture(true)">Start Engine</button>
-                    <button id="stop-live-btn" style="background: #c0392b; color: white; padding: 6px 12px; font-size: 0.85em; width: auto;" onclick="toggleLiveCapture(false)" disabled>Stop</button>
-                    <button style="background: #34495e; color: white; padding: 6px 12px; font-size: 0.85em; width: auto;" onclick="clearLiveMetrics()">Clear</button>
-                </div>
-                <div id="live-status-text" style="font-family: monospace; font-size: 0.9em; margin-top: 8px; color: var(--text-muted);">Status: INACTIVE</div>
+            
+            <div class="advanced-toggle-header" onclick="toggleVisibilitySection('live-sniffer-collapsible', 'sniffer-arrow')">
+                <span>🔴 Advanced: Live Socket Sniffer</span>
+                <span id="sniffer-arrow">▶</span>
             </div>
-
-            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+            
+            <div id="live-sniffer-collapsible" class="collapsible-content" style="background: var(--bg-dark); padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 0.85em; box-sizing: border-box;">
+                <p style="margin: 0 0 10px 0; color: var(--text-muted);">Listen to live promiscuous network packet frames directly from the host socket interface.</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                    <button id="start-live-btn" style="background: var(--accent-green); color: white; padding: 6px 10px; font-size: 0.8em; width: auto;" onclick="toggleLiveCapture(true)">Start Engine</button>
+                    <button id="stop-live-btn" style="background: #c0392b; color: white; padding: 6px 10px; font-size: 0.8em; width: auto;" onclick="toggleLiveCapture(false)" disabled>Stop</button>
+                    <button style="background: #34495e; color: white; padding: 6px 10px; font-size: 0.8em; width: auto;" onclick="clearLiveMetrics()">Clear</button>
+                </div>
+                <div id="live-status-text" style="font-family: monospace; font-size: 0.85em; color: var(--text-muted);">Status: INACTIVE</div>
+            </div>
 
             <div class="panel-title">Telemetry Ingestion</div>
             <form id="upload-form">
@@ -222,6 +242,12 @@
                     <label for="ai-checkbox">Engage Local AI Analytical Coprocessor</label>
                 </div>
 
+                <!-- NEW: ADVANCED SECURITY METRICS TOGGLE FOR LAYMAN VIEW -->
+                <div class="checkbox-group" id="analyst-toggle-wrapper" style="margin-top: -5px; margin-bottom: 22px;">
+                    <input type="checkbox" id="analyst-metrics-checkbox" onchange="handleMetricsToggle(this.checked)">
+                    <label for="analyst-metrics-checkbox" style="color: var(--accent-cyan);">Enable Advanced Analyst Metrics</label>
+                </div>
+
                 <button type="submit" id="submit-btn" style="background-color: var(--accent-cyan);">Deploy Parsing Analytics</button>
             </form>
 
@@ -236,7 +262,7 @@
             
             <div id="initial-placeholder" style="color: var(--text-muted); text-align: center; padding-top: 100px;">
                 <p style="font-size: 1.2em; margin: 0;">System Idle.</p>
-                <p style="font-size: 0.85em; margin: 5px 0 0 0;">Upload a diagnostic log file or engage the live sniffer interface loop.</p>
+                <p style="font-size: 0.85em; margin: 5px 0 0 0;">Upload a diagnostic log file to execute security triage matrices.</p>
             </div>
 
             <div id="results-display" style="display: none;">
@@ -246,7 +272,12 @@
                     <div class="meta-item">Triggered Incidents: <span id="res-alert-count">0</span></div>
                 </div>
 
-                <div id="analytics-visualization-row" style="display: none; grid-template-columns: 1fr; gap: 20px; margin-bottom: 25px;">
+                <div class="advanced-toggle-header" onclick="toggleVisibilitySection('analytics-visualization-row', 'charts-arrow')">
+                    <span>📈 Toggle Rich Analytics Charting Visualization</span>
+                    <span id="charts-arrow">▶</span>
+                </div>
+
+                <div id="analytics-visualization-row" class="collapsible-content" style="grid-template-columns: 1fr; gap: 20px; margin-bottom: 25px;">
                     <div style="background: var(--bg-dark); padding: 15px; border-radius: 6px; min-height: 220px; box-sizing: border-box;">
                         <p style="margin: 0 0 12px 0; font-size: 0.85em; font-weight: bold; color: var(--accent-cyan); text-transform: uppercase;">
                             📈 Volumetric Event Distribution Timeline
@@ -282,28 +313,42 @@
     let livePollingInterval = null;
     let timelineChartInstance = null;
     let severityChartInstance = null;
+    let hasChartRenderedData = false;
+
+    // -------------------------------------------------------------------------
+    // ACCORDION TOGGLE MANAGEMENT COMPONENT
+    // -------------------------------------------------------------------------
+    function toggleVisibilitySection(sectionId, arrowId) {
+        const element = document.getElementById(sectionId);
+        const arrow = document.getElementById(arrowId);
+        
+        if (element.style.display === "grid" || element.style.display === "block") {
+            element.style.display = "none";
+            arrow.innerText = "▶";
+        } else {
+            element.style.display = (sectionId === "analytics-visualization-row") ? "grid" : "block";
+            arrow.innerText = "▼";
+        }
+    }
 
     // -------------------------------------------------------------------------
     // DYNAMIC GRAPHIC RENDERING INFRASTRUCTURE LAYER
     // -------------------------------------------------------------------------
     function renderAnalyticsCharts(alerts) {
-        const row = document.getElementById('analytics-visualization-row');
         if (!alerts || alerts.length === 0) {
-            row.style.display = 'none';
+            hasChartRenderedData = false;
             return;
         }
-        row.style.display = 'grid';
+        hasChartRenderedData = true;
 
-        // Process Severity Allocations
         const severityCounts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
         alerts.forEach(a => {
             if (severityCounts[a.severity] !== undefined) severityCounts[a.severity]++;
         });
 
-        // Parse Volumetric Chronological Time Segments
         const timeBuckets = {};
         alerts.forEach(a => {
-            let timeLabel = "Live Stream Window";
+            let timeLabel = "Live Wire Window";
             if (a.timestamp) {
                 const dateObj = new Date(a.timestamp * 1000);
                 timeLabel = dateObj.toTimeString().split(' ')[0];
@@ -314,11 +359,9 @@
         const timelineLabels = Object.keys(timeBuckets).sort();
         const timelineData = timelineLabels.map(label => timeBuckets[label]);
 
-        // Tear down lingering instances to protect document canvas layouts
         if (timelineChartInstance) timelineChartInstance.destroy();
         if (severityChartInstance) severityChartInstance.destroy();
 
-        // Render Line Timeline Frame
         const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
         timelineChartInstance = new Chart(ctxTimeline, {
             type: 'line',
@@ -345,7 +388,6 @@
             }
         });
 
-        // Render Pie Risk Gauge
         const ctxSeverity = document.getElementById('severityChart').getContext('2d');
         severityChartInstance = new Chart(ctxSeverity, {
             type: 'doughnut',
@@ -367,6 +409,108 @@
         });
     }
 
+    // Global visibility state for advanced compliance metadata
+    let showAdvancedAnalystMetrics = false;
+
+    // Handles live UI updates if the user toggles visibility while looking at active logs
+    function handleMetricsToggle(isChecked) {
+        showAdvancedAnalystMetrics = isChecked;
+        
+        // Dynamic visibility adjustments without needing to re-request data
+        const mitreBadges = document.querySelectorAll('.analyst-mitre-badge');
+        const cveBadges = document.querySelectorAll('.analyst-cve-badge');
+        const nistBlocks = document.querySelectorAll('.analyst-nist-block');
+
+        const displayValue = isChecked ? 'inline-block' : 'none';
+        const blockDisplayValue = isChecked ? 'block' : 'none';
+
+        mitreBadges.forEach(b => b.style.display = displayValue);
+        cveBadges.forEach(b => b.style.display = displayValue);
+        nistBlocks.forEach(b => b.style.display = blockDisplayValue);
+    }
+
+    // -------------------------------------------------------------------------
+    // HELPER FUNCTION: INJECTS COMPLIANCE BADGES INTO ALERT CARD LAYOUT
+    // -------------------------------------------------------------------------
+    function generateAlertTemplateHTML(alert) {
+        // Determine initial visibility rendering rules based on toggle position
+        const inlineStyle = showAdvancedAnalystMetrics ? 'display: inline-block;' : 'display: none;';
+        const blockStyle = showAdvancedAnalystMetrics ? 'display: block;' : 'display: none;';
+
+        // 1. Resilient MITRE ATT&CK Mapping & Normalization
+        let mitreSource = alert.mitre_attack || alert.mitre || alert.mitre_id || [];
+        let mitreArray = [];
+        
+        if (Array.isArray(mitreSource)) {
+            mitreArray = mitreSource;
+        } else if (typeof mitreSource === 'string' && mitreSource.trim() !== '') {
+            mitreArray = mitreSource.split(/[\s,]+/).map(t => t.trim());
+        }
+
+        let mitreBadges = mitreArray.length > 0 
+            ? mitreArray.map(tech => {
+                let cleanTech = tech.toUpperCase().startsWith('T') ? tech.toUpperCase() : 'T' + tech;
+                return `<span class="analyst-mitre-badge" style="${inlineStyle} background: #2c3e50; color: #00adb5; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; font-family: monospace; font-weight: bold; border: 1px solid rgba(0,173,181,0.2); margin-left: 4px;">MITRE ${cleanTech}</span>`;
+              }).join(' ')
+            : `<span class="analyst-mitre-badge" style="${inlineStyle} background: #1a1c23; color: #7f8c8d; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; border: 1px dashed #393e46; margin-left: 4px;">No MITRE Tag</span>`;
+
+        // 2. Resilient CVE Extraction & Normalization
+        let cveSource = alert.potential_cves || alert.cves || alert.cve || [];
+        let cveArray = [];
+
+        if (Array.isArray(cveSource)) {
+            cveArray = cveSource;
+        } else if (typeof cveSource === 'string' && cveSource.trim() !== '') {
+            cveArray = cveSource.split(/[\s,]+/).map(c => c.trim());
+        }
+
+        let cveBadges = cveArray.length > 0
+            ? cveArray.map(cve => {
+                let cleanCve = cve.toUpperCase().startsWith('CVE-') ? cve.toUpperCase() : 'CVE-' + cve;
+                return `<span class="analyst-cve-badge" style="${inlineStyle} background: rgba(255,87,34,0.1); color: #ff5722; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; font-family: monospace; font-weight: bold; border: 1px solid rgba(255,87,34,0.3); margin-left: 4px;">${cleanCve}</span>`;
+              }).join(' ')
+            : '';
+
+        // 3. Resilient NIST CSF Framework Mapping Block
+        let nistFunction = "";
+        let nistId = "";
+        let nistDesc = "";
+
+        if (alert.nist_mapping && typeof alert.nist_mapping === 'object') {
+            nistFunction = alert.nist_mapping.function || "";
+            nistId = alert.nist_mapping.id || "";
+            nistDesc = alert.nist_mapping.desc || alert.nist_mapping.description || "";
+        } else if (alert.nist_function || alert.nist_id) {
+            nistFunction = alert.nist_function || "";
+            nistId = alert.nist_id || "";
+            nistDesc = alert.nist_description || alert.nist_desc || "";
+        }
+
+        let nistLabel = (nistFunction || nistId)
+            ? `<div class="analyst-nist-block" style="${blockStyle} margin-top: 10px; font-size: 0.82em; font-family: monospace; color: var(--accent-cyan); border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 8px;">
+                <strong>NIST CSF Alignment:</strong> 
+                <span style="background: rgba(0, 173, 181, 0.1); padding: 1px 5px; border-radius: 2px; border: 1px solid var(--accent-cyan); font-weight: bold;">
+                    ${nistFunction.toUpperCase()} ${nistId ? '// ' + nistId.toUpperCase() : ''}
+                </span> 
+                ${nistDesc ? `<span style="color: var(--text-muted); margin-left: 4px;">— ${nistDesc}</span>` : ''}
+               </div>`
+            : '';
+
+        return `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+                <h4 style="margin: 0; font-size: 1.05em; color: var(--text-light); font-weight: bold;">${alert.title}</h4>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                    ${cveBadges}
+                    ${mitreBadges}
+                    <span style="padding: 2px 6px; border-radius: 3px; font-size: 0.8em; font-weight: bold; background: rgba(255,255,255,0.08); color: var(--text-light); font-family: monospace;">[${alert.severity}]</span>
+                </div>
+            </div>
+            <p style="margin: 8px 0 4px 0; font-size: 0.9em;"><strong>Culprit Actor Anchor:</strong> <code>${alert.source || '127.0.0.1'}</code></p>
+            <p style="margin: 4px 0 8px 0; color: var(--text-muted); font-size: 0.9em; line-height: 1.45;"><strong>Risk Rationalization:</strong> ${alert.why_it_matters}</p>
+            ${nistLabel}
+        `;
+    }
+
     // -------------------------------------------------------------------------
     // LIVE PACKET SNIFFER DASHBOARD CONTROL ENGINE
     // -------------------------------------------------------------------------
@@ -379,7 +523,6 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ enable: enable })
             });
-            const data = await response.json();
             
             document.getElementById('start-live-btn').disabled = enable;
             document.getElementById('stop-live-btn').disabled = !enable;
@@ -414,7 +557,6 @@
             const alertsWrapper = document.getElementById('alerts-wrapper');
             document.getElementById('res-alert-count').innerText = data.alerts ? data.alerts.length : 0;
 
-            // Update charts dynamically with the live data feed
             renderAnalyticsCharts(data.alerts);
 
             const clearExistingPlaybook = document.getElementById('live-playbook-card');
@@ -443,18 +585,14 @@
                 data.alerts.forEach(alert => {
                     const alertDiv = document.createElement('div');
                     alertDiv.className = `alert-item severity-${alert.severity}`;
-                    alertDiv.innerHTML = `
-                        <h4 style="margin: 0 0 8px 0; font-size: 1.05em;">${alert.title} [${alert.severity}]</h4>
-                        <p style="margin: 4px 0; font-size: 0.9em;"><strong>Live Culprit Node:</strong> <code>${alert.source}</code></p>
-                        <p style="margin: 6px 0 0 0; color: var(--text-muted); font-size: 0.9em;"><strong>Risk Rationalization:</strong> ${alert.why_it_matters}</p>
-                    `;
+                    alertDiv.innerHTML = generateAlertTemplateHTML(alert);
                     alertsWrapper.appendChild(alertDiv);
                 });
             } else {
                 const cleanMsg = document.createElement('div');
                 cleanMsg.className = "alert-item";
                 cleanMsg.style.borderLeftColor = "var(--accent-green)";
-                cleanMsg.innerHTML = `<p style="color: var(--accent-green); font-weight: bold; margin:0;">[+] Monitoring socket boundaries. No signatures matched on active wire frames.</p>`;
+                cleanMsg.innerHTML = `<p style="color: var(--accent-green); font-weight: bold; margin:0; font-size: 0.9em;">[+] Monitoring socket boundaries. No signatures matched on active wire frames.</p>`;
                 alertsWrapper.appendChild(cleanMsg);
             }
         } catch (e) {
@@ -468,6 +606,7 @@
         document.getElementById('alerts-wrapper').innerHTML = '';
         document.getElementById('res-alert-count').innerText = '0';
         document.getElementById('analytics-visualization-row').style.display = 'none';
+        document.getElementById('charts-arrow').innerText = "▶";
         if (timelineChartInstance) timelineChartInstance.destroy();
         if (severityChartInstance) severityChartInstance.destroy();
         toggleLiveCapture(false);
@@ -502,6 +641,9 @@
         alertsWrapper.innerHTML = '';
         aiReportWrapper.style.display = 'none';
         
+        document.getElementById('analytics-visualization-row').style.display = 'none';
+        document.getElementById('charts-arrow').innerText = "▶";
+
         progressContainer.style.display = 'block';
         progressFill.style.width = '10%';
         statusMessage.innerText = "Initializing file ingestion pipeline...";
@@ -548,12 +690,10 @@
             document.getElementById('res-log-type').innerText = data.log_type;
             document.getElementById('res-alert-count').innerText = data.alerts ? data.alerts.length : 0;
 
-            // Trigger charting sequence for file assets
             renderAnalyticsCharts(data.alerts);
 
             // 1. BOUNDARY CHECK: Parser Override Failures
             if (data.mismatch_detected && (!data.alerts || data.alerts.length === 0) && (!data.ai_report || data.ai_report.includes("Ingestion stream empty"))) {
-                document.getElementById('analytics-visualization-row').style.display = 'none';
                 alertsWrapper.innerHTML = `
                     <div style="border: 2px dashed #ff5722; background: rgba(255, 87, 34, 0.1); padding: 20px; border-radius: 6px; margin: 15px 0;">
                         <h4 style="color: #ff5722; margin: 0 0 8px 0; font-size: 1.15em;">❌ Ingestion Blocked: Total Parser Incompatibility</h4>
@@ -606,11 +746,7 @@
                     data.alerts.forEach(alert => {
                         const alertDiv = document.createElement('div');
                         alertDiv.className = `alert-item severity-${alert.severity}`;
-                        alertDiv.innerHTML = `
-                            <h4 style="margin: 0 0 8px 0; font-size: 1.05em;">${alert.title} [${alert.severity}]</h4>
-                            <p style="margin: 4px 0; font-size: 0.9em;"><strong>Culprit Actor Anchor:</strong> <code>${alert.source}</code></p>
-                            <p style="margin: 6px 0 0 0; color: var(--text-muted); font-size: 0.9em;"><strong>Risk Rationalization:</strong> ${alert.why_it_matters}</p>
-                        `;
+                        alertDiv.innerHTML = generateAlertTemplateHTML(alert);
                         alertsWrapper.appendChild(alertDiv);
                     });
                 } else {
@@ -627,21 +763,19 @@
                     let formattedText = data.ai_report
                         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                         .replace(/^\*\s(.*)$/gm, '<li>$1</li>')
-                        .replace(/^\d\.\s(.*)$/gm, '<li>$1</li>')
                         .replace(/\n/g, '<br>');
                     
                     document.getElementById('res-ai-text').innerHTML = formattedText;
                     aiReportWrapper.style.display = 'block';
+                } else {
+                    aiReportWrapper.style.display = 'none';
                 }
             }
-
-        } catch (error) {
-            clearInterval(progressInterval);
-            statusMessage.innerText = "Pipeline process execution crashed.";
-            alert(`Execution Error: ${error.message}`);
+        } catch (err) {
+            statusMessage.innerText = "Pipeline ingestion failure.";
+            alertsWrapper.innerHTML = `<div class="alert-item" style="border-left-color: var(--accent-orange);"><p style="color: var(--accent-orange); margin:0; font-weight:bold;">[-] Error parsing data stream: ${err.message}</p></div>`;
         } finally {
             submitBtn.disabled = false;
-            setTimeout(() => { progressContainer.style.display = 'none'; }, 1000);
         }
     });
 </script>

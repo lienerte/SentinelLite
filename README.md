@@ -1,59 +1,120 @@
-# SentinelLite: Pluggable & AI-Optimized SIEM Architectural Framework
+# SentinelLite // Modular Security Information & Event Management Framework
 
-SentinelLite is an agile, factory-driven Security Information and Event Management (SIEM) simulation framework built to ingest, auto-classify, parse, and correlate disparate multi-format log arrays (PCAP, Linux Syslog, Combined Web/Nginx). 
-
-The architecture leverages strict protocol normalization layers to completely decouple core telemetry ingestion from downstream behavioral signature matching and an asynchronous local AI Coprocessor engine.
+SentinelLite is a lightweight, high-performance, format-agnostic SIEM and log analysis utility built to process heterogeneous security telemetry. Operating as a pluggable triage pipeline, the framework ingests distinct structural log formats, cross-references logs against static signature heuristics, compiles remediation sequences via an on-demand SOAR decision engine, and applies an asynchronous local AI coprocessor for contextual threat analysis.
 
 ---
 
-## 🏗️ Core Architectural Blueprint
+## 🏗️ System Architecture
 
-The engine is engineered around standard object-oriented patterns to avoid the fragility of raw script automation:
+The core framework follows a deterministic, pipeline-based data flow model, enforcing strict boundary isolation between data ingestion and alert correlation:
 
-1. **Intelligent Ingestion Layer (`LogClassifier`):** Reads early byte streams to evaluate content-based structural heuristics (e.g., matching hex magic numbers for binary files or regex boundaries for strings), completely bypassing fragile file-extension dependency.
-2. **Unified Normalized Event Schema (`BaseParser`):** Enforces a strict schema map across all dynamic parsers. Whether log data originates as a binary network packet capture or a plaintext web-server string, it maps to a uniform dictionary payload containing immutable properties (`src_ip`, `dst_ip`, `payload`, `event_type`).
-3. **Pluggable Cross-Protocol Correlation Engine (`AnalysisEngine`):** Utilizes a dynamic plugin manifest matrix. It looks across distinct protocols over a timeline, tracing a single actor IP as it pivots from perimeter recons into internal authorization brute-forcing.
-4. **Asynchronous Local AI Coprocessor Layer (`AIIntegrationLayer`):** Interacts natively with a local offline LLM daemon (Ollama/Llama3). To shield high-velocity file ingestion from blocking execution queues, inference processes run asynchronously, keeping the UI highly responsive.
+[ Raw Ingestion Stream ]
+│
+▼
+┌───────────────┐      Forced Routing
+│ Engine Router │ ──────────────────────────┐
+└───────────────┘                           │
+│ (Auto-Detect Engine)              ▼
+▼                          ┌─────────────────┐
+┌───────────────┐                  │ Parser Override │
+│ Content Type  │                  └─────────────────┘
+│  Classifier   │                           │
+└───────────────┘                           │
+│                                   │
+▼                                   ▼
+┌───────────────┐ 🛡️ Error         ┌─────────────────┐
+│ Data Parser   │ ── Invalidation ─►│ Volatile Stream │
+│   Isolation   │    Handling       │     Drop        │
+└───────────────┘                   └─────────────────┘
+│
+▼
+┌───────────────┐
+│ Rules Engine  │ ◄── [ Static Signature Matrix ]
+└───────────────┘
+│
+├──► [ UI Presentation Canvas ]
+│
+├──► [ SOAR Decision Engine ] ──► (Actionable Remediation Playbook)
+│
+└──► [ Local AI Coprocessor ] ──► (Heuristic Context Analytics)
+
 
 ---
 
-## 🛠️ Technology Stack & Dependencies
+## 🚀 Key Architectural Layers
 
-* **Core Pipeline Engine:** Python 3.10+
-* **Asynchronous Web Interface:** Flask, JavaScript (Fetch API / Worker Progress Tracking)
-* **Low-Level Telemetry Extraction:** Scapy (High-precision PCAP layer parsing)
-* **Local Generative Coprocessor:** Ollama Engine API Layer
+* **Format-Agnostic Classifier & Parsing Core:** Features an automated payload routing engine that inspects byte structures to identify telemetry schemas (Binary PCAP, Auth/SSHD Syslog, Nginx Web Logs, and Structured JSON) with line-by-line exception isolation to survive malformed streams.
+* **Static Correlation Matrix:** Executes deterministic rule matching across all normalized events to track Indicators of Compromise (IoCs) like brute-force thresholds, directory traversals, and multi-stage exploitation pivots.
+* **Automated SOAR Decision Engine:** Generates real-time, copy-pasteable terminal recipes (iptables drops, service isolation blocks) immediately upon signature matches to optimize Mean Time to Respond (MTTR).
+* **Local AI Analytical Coprocessor:** Integrates with local model instances via zero-dependency APIs to perform on-demand tactical reviews of complex attack sequences without leaking data to external infrastructure.
 
 ---
 
-## 🚀 Step-by-Step Execution Guide
+## 🛠️ Installation & Workspace Setup
 
-### 1. Initialize the Local Inference Engine
-Ensure your local Ollama daemon is active in the background and hosting your targeted language model weights:
+### Prerequisites
+* Python 3.8+
+* Local administrative privileges (required for high-precision packet processing bindings)
+
+### Step 1: Clone and Prepare Environment
 ```bash
-ollama run llama3
+git clone [https://github.com/your-username/sentinel-lite.git](https://github.com/your-username/sentinel-lite.git)
+cd sentinel-lite
 
-pip install flask scapy requests
+Step 2: Establish Virtual Environment & Dependencies
+Bash
+
+# Create and activate environment
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+
+# Install third-party framework dependencies
+pip install -r requirements.txt
+
+    Note: Ensure packages like Flask and scapy are specified within your requirements.txt file.
+
+Step 3: Run the Local AI Engine (Optional)
+
+If utilizing the local analytical coprocessor feature, ensure your local AI instance is running and reachable via your environment's local endpoints:
+Bash
+
+ollama run llama3  # Or your specific local target model configuration
+
+💻 Running the Application
+
+Launch the primary Flask web server from your workspace root directory:
+Bash
 
 python app.py
-```
 
-Open your browser and navigate to http://127.0.0.1:5000 to interact with the dashboard.
-🔬 Complex Ingestion Case Studies
-Case Study A: Cleartext Administrative Network Audit
+Open your browser and navigate to the local presentation canvas:
+Plaintext
 
-    Target Artifact: samples/tcp-ecn-sample.pcap
+[http://127.0.0.1:5000](http://127.0.0.1:5000)
 
-    Pipeline Action: The framework sniffs the binary magic bytes, overrides default text lines, routes to the PcapParser, handles Scapy's microsecond-precision EDecimal timestamp casting dynamically to protect JSON serialization streams, and isolates unencrypted Cisco IOS diagnostic summaries (GET /show-tech).
+📁 Directory Architecture
+Plaintext
 
-    AI Realization: The local LLM contextualizes the traffic as non-malicious but insecure infrastructure management, automatically rendering real-world remediation advice focused on protocol encapsulation and transport encryption rather than connection-breaking firewall rules.
+sentinel_lite/
+│
+├── app.py                     # Flask Application Controller & API Endpoint Bindings
+├── requirements.txt           # Framework Third-Party Application Dependencies
+├── README.md                  # System Documentation Matrix
+│
+├── core/                      # Core Logical Analysis Packages
+│   ├── __init__.py
+│   ├── parsers.py             # Line-Isolated Ingestion Parsers (PCAP, Syslog, Web, JSON)
+│   ├── rules_engine.py        # Static Heuristic Rules Matrix & Threshold Trackers
+│   └── soar.py                # Automated Remediation Playbook Compilers
+│
+├── artifacts/                 # Volatile Output Storage Matrix
+│   └── playbooks/             # Hot-Compiled Mitigation Scripts & Action Targets
+│
+└── templates/                 # Presentation Layer Templates
+    └── index.html             # Minimalist Operational UI Dashboard
 
-Case Study B: Multi-Stage Cross-Protocol Attack Sequence
+🔒 Production Security Standard
 
-    Target Artifact: samples/multi_stage_attack.log
+    Line-Level Invalidation Isolation: Every log parser enforces strict local try-except contexts per element row. If a single line contains corrupt data or anomalous byte injections, that row is safely flagged and dropped without compromising the runtime state of the active analysis cycle.
 
-    Pipeline Action: Ingests a multiplexed file containing mixed Nginx web proxy scans and Linux SSH authentication failures. The MultiParser layer strips out the lines concurrently. The CrossProtocolCorrelationPlugin tracks the unified malicious footprint, flagging a CRITICAL alert for an adversary tactical pivot.
-
-🛡️ Error Handling & Defensive Boundaries
-
-    Total Parser Incompatibility Shielding: If a user forces a mismatched parser selection via the frontend UI dropdown (e.g., executing the JSON engine on text streams), the backend maps the classification collision and suppresses downstream empty-state AI parsing errors. The frontend UI immediately transforms into an amber/red validation warning panel to guard metric collection parameters.
+    Zero External Overhead: Telemetry logs and packet matrices are parsed entirely inside memory constraints, and AI classification runs strictly on local hardware scopes. No operational data is ever transmitted to external nodes or commercial cloud APIs.

@@ -74,6 +74,5 @@ class MultiParser(BaseParser):
                             
         except Exception as e:
             print(f"[!] Warning: Structural parsing bypass on line {line_num}: {e}")
-            continue
             
         return normalized_records

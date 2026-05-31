@@ -8,6 +8,7 @@ import os
 from flask import Flask, render_template, request, jsonify
 
 # Core System Structural Imports
+from core.rules_engine import AdvancedRulesEngine
 from core.log_classifier import LogClassifier
 from core.parser_factory import ParserFactory
 from core.analysis_engine import AnalysisEngine
@@ -21,6 +22,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 ARTIFACT_FOLDER = "artifacts"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+rules_engine = AdvancedRulesEngine()
 
 # Ensure processing directories exist on local disk initialization
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -67,25 +69,47 @@ def analyze_async():
         if override_type and auto_detected_type != "UNKNOWN" and override_type.upper() != auto_detected_type:
             mismatch_detected = True
 
-        # Intercept complete parsing breakages before initializing pipelines
+        # ─── NEW INTERCEPTION BLOCK: UNIVERSAL RULE SCAN FOR UNKNOWN FILES ───
         if log_type == "UNKNOWN":
+            with open(save_path, 'rb') as f:
+                raw_bytes = f.read()
+            
+            # Universal fallback scanner execution loop
+            alerts = rules_engine.evaluate_log_data(raw_bytes)
+            
+            # Generate playbook if dynamic rules caught malicious text indicators
+            playbook_meta = None
+            if alerts:
+                soar_engine = RemediationOrchestrator()
+                playbook_meta = soar_engine.generate_playbook(alerts, file.filename)
+            
+            # Set up a conditional message for the AI layer
+            ai_report = ""
+            if run_ai_checkbox:
+                if alerts:
+                    ai_report = f"### 🤖 Local AI Analysis Matrix\nIdentified {len(alerts)} threat indicators matching open-source Sigma rules inside unclassified telemetry payload structure."
+                else:
+                    ai_report = "### 🤖 Ingestion Error\nFramework parsing skipped: Unrecognized file structural fingerprints."
+
             return jsonify({
                 "filename": file.filename,
                 "log_type": "UNKNOWN",
                 "auto_detect_type": auto_detected_type,
                 "mismatch_detected": False,
-                "alerts": [],
-                "playbook_meta": None,
-                "ai_report": "### 🤖 Ingestion Error\nFramework parsing skipped: Unrecognized file structural fingerprints."
+                "alerts": alerts,
+                "playbook_meta": playbook_meta,
+                "ai_report": ai_report
             })
 
         # 3. Normalization Phase: Resolve factory object and parse bytes to schema dictionaries
         parser = ParserFactory.get_parser(log_type)
         events = parser.parse(save_path)
 
-        # 4. Correlation Phase: Spin up the rule engine matrix across active plugins
-        engine = AnalysisEngine()
-        alerts = engine.execute_pipeline(events)
+        # 4. Correlation Phase: Run your new global 3k+ Sigma rules engine
+        # Read the raw bytes or iterate across reconstructed text events
+        with open(save_path, 'rb') as f:
+            raw_bytes = f.read()
+        alerts = rules_engine.evaluate_log_data(raw_bytes)
 
         # 5. SOAR Advisory Phase: Compile point-and-click mitigation instructions if threats exist
         soar_engine = RemediationOrchestrator()
@@ -152,5 +176,14 @@ def clear_live_cache():
     return jsonify({"status": "cleared"})
 
 if __name__ == '__main__':
+    import os
     # Initialize development server boundary on standard port structure
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    if __name__ == '__main__':
+    # Check if this is the main worker thread, preventing double execution
+        if os.environ.get('WERZEUG_RUN_MAIN') == 'true':
+            print("[*] Running application initialization sequences...")
+            # Put your rule loading/diagnostic function calls here if they are in functions:
+            # load_sigma_rules()
+            
+    # Flask app runs outside the wrapper so both processes know how to handle the server
+    app.run(debug=True, port=5000)

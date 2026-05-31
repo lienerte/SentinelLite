@@ -1,41 +1,22 @@
 ================================================================================
 🛡️  SENTINELLITE ON-DEMAND REMEDIATION PLAYBOOK
-Generated:   2026-05-25 23:47:40
-Target Log:  tcp-ecn-sample.pcap
+Generated:   2026-05-31 12:58:08
+Target Log:  multi_stage_attack.log
 Status:      PENDING ADMINISTRATIVE REVIEW (MANUAL EXECUTION ONLY)
 ================================================================================
 
 This document provides point-and-click mitigation operations compiled specifically
 from the structural indicators extracted during the active parsing cycle.
 
-[1] INCIDENT TIER: LOW | TRIGGER RULE: R03_VOLUME_SPIKE
-    Symptom Summary: Anomalous Volumetric Baseline Exceeded
-    Target Actor Host: 1.1.23.3
+[1] INCIDENT TIER: CRITICAL | TRIGGER RULE: R04_CROSS_PROTOCOL_PIVOT
+    Symptom Summary: Adversarial Tactic Shift: Cross-Protocol Recon-to-Auth Pivot Detected
+    Target Actor Host: 185.220.101.5
 
     👉 MANDATORY REMEDIATION COMMANDS (Copy & Paste to Server Terminal):
-        # Low-risk triage block. Monitor host footprints for escalation indicators.
-        echo '[INFO] Monitor traffic trends for source IP: 1.1.23.3'
-
---------------------------------------------------------------------------------
-
-[2] INCIDENT TIER: MEDIUM | TRIGGER RULE: R05_INFRA_AUDIT_EXCHANGE
-    Symptom Summary: Sensitive Infrastructure Audit Transmission Detected
-    Target Actor Host: 1.1.23.3
-
-    👉 MANDATORY REMEDIATION COMMANDS (Copy & Paste to Server Terminal):
-        # Audit cleartext administrative footprint. Enforce connection pooling / TLS encapsulation.
-        # Review target device configurations matching source management node: 1.1.23.3
-        echo '[WARN] Transition cleartext HTTP endpoint interactions to SSHv2 or HTTPS immediately.'
-
---------------------------------------------------------------------------------
-
-[3] INCIDENT TIER: MEDIUM | TRIGGER RULE: R05_INFRA_AUDIT_EXCHANGE
-    Symptom Summary: Sensitive Infrastructure Audit Transmission Detected
-    Target Actor Host: 1.1.12.1
-
-    👉 MANDATORY REMEDIATION COMMANDS (Copy & Paste to Server Terminal):
-        # Audit cleartext administrative footprint. Enforce connection pooling / TLS encapsulation.
-        # Review target device configurations matching source management node: 1.1.12.1
-        echo '[WARN] Transition cleartext HTTP endpoint interactions to SSHv2 or HTTPS immediately.'
+        # Option A: Isolate network layer via Linux Netfilter firewall
+        sudo iptables -A INPUT -s 185.220.101.5 -j DROP -m comment --comment 'SentinelLite Manual Block'
+        
+        # Option B: Commit instant SSH service ban via host-based IDS
+        sudo fail2ban-client set sshd banip 185.220.101.5
 
 --------------------------------------------------------------------------------
