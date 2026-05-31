@@ -4,41 +4,57 @@ SentinelLite is a lightweight, high-performance, format-agnostic SIEM and log an
 
 ---
 
-## 🏗️ System Architecture
+### 🔄 System Data Architecture & Pipeline Flow
 
-The core framework follows a deterministic, pipeline-based data flow model, enforcing strict boundary isolation between data ingestion and alert correlation:
+```mermaid
+graph TD
+    %% Define Styles & Palette
+    classDef source fill:#1a1c23,stroke:#7f8c8d,stroke-width:2px,color:#fff;
+    classDef core fill:#2c3e50,stroke:#00adb5,stroke-width:2px,color:#fff;
+    classDef logic fill:#1f4068,stroke:#16c79a,stroke-width:2px,color:#fff;
+    classDef layman fill:#34495e,stroke:#bdc3c7,stroke-width:1px,style:dashed,color:#ecf0f1;
+    classDef analyst fill:#2d132c,stroke:#ff5722,stroke-width:2px,color:#fff;
 
-[ Raw Ingestion Stream ]
-│
-▼
-┌───────────────┐      Forced Routing
-│ Engine Router │ ──────────────────────────┐
-└───────────────┘                           │
-│ (Auto-Detect Engine)              ▼
-▼                          ┌─────────────────┐
-┌───────────────┐                  │ Parser Override │
-│ Content Type  │                  └─────────────────┘
-│  Classifier   │                           │
-└───────────────┘                           │
-│                                   │
-▼                                   ▼
-┌───────────────┐ 🛡️ Error         ┌─────────────────┐
-│ Data Parser   │ ── Invalidation ─►│ Volatile Stream │
-│   Isolation   │    Handling       │     Drop        │
-└───────────────┘                   └─────────────────┘
-│
-▼
-┌───────────────┐
-│ Rules Engine  │ ◄── [ Static Signature Matrix ]
-└───────────────┘
-│
-├──► [ UI Presentation Canvas ]
-│
-├──► [ SOAR Decision Engine ] ──► (Actionable Remediation Playbook)
-│
-└──► [ Local AI Coprocessor ] ──► (Heuristic Context Analytics)
+    %% Data Pipeline Nodes
+    A[Raw Telemetry Ingestion<br>e.g., mimikatz_test.txt] --> B(Engine Ingestion Layer)
+    B --> C{Rule Compiler}
+    
+    %% Compilation Phase
+    C -->|Index Scan| D[3,123 Sigma Signatures Compiled]
+    D --> E{Incident Triggered?}
+    
+    %% Split Routing based on User Preference Toggle
+    E -->|No| F[Clean Log Output]
+    E -->|Yes| G{UI Simplicity Toggle}
+    
+    %% Layman View Path
+    G -->|Layman Mode: Disabled| H[Standard Risk Summary]
+    H --> H1[Culprit Actor Anchor IP]
+    H --> H2[Risk Rationalization Description]
+    
+    %% Advanced Analyst Metrics Path
+    G -->|Analyst Mode: Enabled| I[Advanced Security Metrics Matrix]
+    I --> J[MITRE ATT&CK Mapping<br>e.g., T1003.001 LSASS]
+    I --> K[NIST CSF Alignment<br>e.g., DETECT // DE.CM-1]
+    I --> L[Normalized CVE Badges]
+    
+    %% Synthesis & Local Coprocessor Integration
+    H2 --> M{AI Coprocessor Engaged?}
+    J --> M
+    K --> M
+    L --> M
+    
+    M -->|Yes| N[Local AI Analytical Core<br>Sandbox Execution]
+    M -->|No| O[Direct UI Render Output]
+    
+    N --> O
 
-
+    %% Apply Classes to Node Blocks
+    class A,B source;
+    class C,D,E core;
+    class G,M logic;
+    class H,H1,H2 layman;
+    class I,J,K,L,N analyst;
 ---
 
 ## 🚀 Key Architectural Layers
