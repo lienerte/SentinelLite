@@ -6,7 +6,7 @@ The interface features an adaptive **UI Simplicity Toggle** designed to seamless
 
 ---
 
-### 🔄 System Data Architecture & Pipeline Flow
+### System Data Architecture & Pipeline Flow
 
 ```mermaid
 graph TD
@@ -61,19 +61,19 @@ graph TD
 
 ---
 
-## 🚀 Key Architectural Layers
+## Key Architectural Layers
 
-🚀 Key Architectural Layers
+* Format-Agnostic Classifier & Parsing Core: Features an automated payload routing engine that inspects byte structures to identify telemetry schemas (Binary PCAP, Auth/SSHD Syslog, Nginx Web Logs, and Structured JSON) with line-by-line exception isolation to survive malformed streams.
 
-    Format-Agnostic Classifier & Parsing Core: Features an automated payload routing engine that inspects byte structures to identify telemetry schemas (Binary PCAP, Auth/SSHD Syslog, Nginx Web Logs, and Structured JSON) with line-by-line exception isolation to survive malformed streams.
+* 3,123-Signature Sigma Compilation Matrix: Compiles thousands of community-standard rule-sets directly into an active in-memory map at runtime, validating complex nested MITRE ATT&CK sub-techniques (e.g., T1003.001) and standardizing multi-format CVE structures instantly.
 
-    3,123-Signature Sigma Compilation Matrix: Compiles thousands of community-standard rule-sets directly into an active in-memory map at runtime, validating complex nested MITRE ATT&CK sub-techniques (e.g., T1003.001) and standardizing multi-format CVE structures instantly.
+* Automated SOAR Decision Engine: Generates real-time, copy-pasteable terminal mitigation scripts (iptables drops, routing blocks, process isolation) immediately upon signature matches to optimize Mean Time to Respond (MTTR).
 
-    Automated SOAR Decision Engine: Generates real-time, copy-pasteable terminal mitigation scripts (iptables drops, routing blocks, process isolation) immediately upon signature matches to optimize Mean Time to Respond (MTTR).
+* Local AI Analytical Coprocessor: Integrates with local model environments via zero-dependency APIs to perform on-demand tactical reviews of complex attack sequences without leaking sensitive corporate telemetry data to third-party commercial cloud endpoints.
 
-    Local AI Analytical Coprocessor: Integrates with local model environments via zero-dependency APIs to perform on-demand tactical reviews of complex attack sequences without leaking sensitive corporate telemetry data to third-party commercial cloud endpoints.
+---
 
-🛠️ Workspace Setup & Deployment
+## Workspace Setup & Deployment
 
 Choose the installation method that matches your engineering requirements:
 Option A: The One-Click Desktop Deployment (Non-Technical Users)
@@ -113,7 +113,9 @@ Prerequisites
         python app.py
         Open your web browser and navigate to: http://127.0.0.1:5000
 
-📁 Directory Architecture
+---
+
+## Directory Architecture
 Plaintext
 
 sentinel_lite/
@@ -144,12 +146,16 @@ sentinel_lite/
 │
 └── static/                    # Layout Customizations & UI Assets
 
-🔒 Production Security Standard
+---
+
+## Production Security Standard
 
     Line-Level Invalidation Isolation: Every log parser enforces strict local try-except contexts per element row. If a single line contains corrupt data or anomalous byte injections, that row is safely flagged and dropped without compromising the runtime state of the active analysis cycle.
 
     Zero External Overhead: Telemetry logs and packet matrices are parsed entirely inside volatile memory constraints, and AI classification runs strictly on local hardware scopes. No operational data or cryptographic hashes are ever transmitted to external nodes or commercial cloud APIs.
 
-Key Improvements Made:
+---
+
+## Key Improvements Made:
 
     Added the Dual-Onboarding Path: Documented the .bat file installation path right beside the raw developer python commands, ensuring any profile of user knows exactly how to light up the application.
