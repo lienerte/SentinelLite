@@ -116,7 +116,8 @@ Prerequisites
 ---
 
 ## Directory Architecture
-Plaintext
+
+```Plaintext
 
 sentinel_lite/
 │
@@ -145,6 +146,7 @@ sentinel_lite/
 │   └── index.html             # Minimalist Dashboard Frontend (Featuring Simplicity Toggle)
 │
 └── static/                    # Layout Customizations & UI Assets
+```
 
 ---
 
