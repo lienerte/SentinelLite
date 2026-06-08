@@ -45,6 +45,7 @@ class AIIntegrationLayer:
             f"implementing network segmentation, or configuring restrictive management plane Access Control Lists (ACLs).\n\n"
             f"Format your analysis professionally with an 'Executive Threat Overview Summary' and specific, actionable 'Remediation Steps'."
             f"steps using clean Markdown styling.\n\n"
+            f"Also make sure to have an ending explicit callout as to whether or not the ingested data seems to indicate malicious events or not."
             f"LOG DATA TO EVALUATE (JSON Format):\n{json.dumps(log_sample, indent=2)}"             
         )
 

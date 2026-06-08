@@ -1,0 +1,114 @@
+/* ========================================================================
+   SENTINELLITE // ENTERPRISE SECURITY DESIGN SYSTEM
+   ======================================================================== */
+
+:root {
+    /* Subtle, Elevation-Based Canvas Layers */
+    --bg-canvas: #0b0d12;
+    --bg-surface: #131620;
+    --bg-surface-elevated: #1c2130;
+    --border-subtle: #22293a;
+    
+    /* Strict, Desaturated Security Status Accents */
+    --accent-primary: #00adb5;   /* Sentinel Teal */
+    --status-critical: #ff4a5a;  /* High Risk Alert */
+    --status-warning: #ffb13b;   /* Medium Warning Alert */
+    --status-success: #16c79a;   /* Low Risk / Clean Data */
+    
+    /* Typography Alpha Channels */
+    --text-primary: rgba(255, 255, 255, 0.92);
+    --text-secondary: rgba(255, 255, 255, 0.60);
+    --text-muted: rgba(255, 255, 255, 0.38);
+}
+
+/* Base Document Overrides */
+body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: -0.01em;
+    line-height: 1.5;
+    margin: 0;
+    padding: 32px;
+}
+
+/* Header & Typography Hierarchy */
+h1, h2, h3 {
+    color: var(--text-primary);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-top: 0;
+}
+
+p {
+    color: var(--text-secondary);
+}
+
+/* Premium Card Architecture (No shadows, crisp borders) */
+.dashboard-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    transition: border-color 0.2s ease;
+}
+
+.dashboard-card:hover {
+    border-color: rgba(0, 173, 181, 0.4);
+}
+
+/* Refined UI Input & Toggle Elements */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+input[type="checkbox"] {
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+/* Hardware-Accelerated Simplicity Toggle Panel Transitions */
+.analyst-panel {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.2s ease, max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active Class injected by JS when toggle is flipped */
+.analyst-panel.active {
+    opacity: 1;
+    max-height: 2000px; /* Safe upper bound allowance for extended tables */
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* Desaturated Status Threat Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.badge-critical {
+    background: rgba(255, 74, 90, 0.1);
+    color: var(--status-critical);
+    border: 1px solid rgba(255, 74, 90, 0.2);
+}
+
+.badge-warning {
+    background: rgba(255, 177, 59, 0.1);
+    color: var(--status-warning);
+    border: 1px solid rgba(255, 177, 59, 0
