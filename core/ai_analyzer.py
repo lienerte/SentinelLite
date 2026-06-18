@@ -15,69 +15,95 @@ class AIIntegrationLayer:
         
     def generate_incident_summary(self, normalized_events, detected_type):
         """
-        Pipes normalized event context strings to a local LLM inference boundary
-        and returns structured Markdown security assessments.
+        Pipes normalized event context strings to a local LLM inference boundary,
+        enforces structured JSON output matching domain protocols, and returns 
+        both a Markdown assessment and a copy-pasteable mitigation playbook.
         """
-        if not self.active:
-            return None
+        # Maintain your existing state check variable (self.active or self.use_local_ai)
+        if hasattr(self, 'active') and not self.active:
+            return "No analysis generated or AI checkbox was disabled.", ""
+        if hasattr(self, 'use_local_ai') and not self.use_local_ai:
+            return "No analysis generated or AI checkbox was disabled.", ""
 
         if not normalized_events:
-            return "### 🤖 Local AI Analyst Engine\n*Ingestion stream empty. No analytical matrix context available to evaluate.*"
+            return "### 🤖 Local AI Analyst Engine\n*Ingestion stream empty. No analytical matrix context available to evaluate.*", ""
 
         # TRUNCATION STRATEGY: Sample the first 15 events to comfortably fit 
         # inside standard local context windows while preserving execution speeds.
         log_sample = normalized_events[:15]
         
-        # PROMPT ENGINEERING: Establish role definitions and strict response parameters
+        # PROMPT ENGINEERING: Hardened structural guardrails for deterministic output layout
         prompt = (
-            # Inside your AI prompt construction loop
             f"You are an expert Principal SOC Analyst and Infrastructure Security Engineer. Analyze the provided "
-            f"normalized SIEM alert matrix with strict technical accuracy. Be precise and realistic.\n"
-            f"CRITICAL RULES:\n"
+            f"normalized alert matrix with strict technical accuracy. Be precise and realistic.\n\n"
+            
+            f"CRITICAL ANALYSIS RULES:\n"
             f"1. CONTEXTUAL REASONING: Differentiate between adversarial attacks and cleartext operational audits. "
             f"A 'show-tech' command from a 'cisco-IOS' User-Agent indicates a benign network management tool, "
             f"NOT an external hacker penetration attempt. The risk is strictly DATA LEAKAGE via cleartext transport.\n"
             f"2. PROTOCOL SANITY CHECK: High volume TCP ACK ('A') packets inside a data stream are standard network "
             f"acknowledgements for file/payload delivery, not automated scanning routines.\n"
-            f"3. SAFE REMEDIATION: Never suggest blocking critical baseline protocol behaviors like TCP ACK flags, "
+            f"3. PERFORMANCE SAFEGUARDS: Never suggest blocking critical baseline protocol behaviors like TCP ACK flags, "
             f"as doing so disrupts legitimate state tracking and breaks active user connections. "
             f"Focus remediation entirely on forcing protocol encapsulation (e.g., migrating HTTP to HTTPS/SSH), "
             f"implementing network segmentation, or configuring restrictive management plane Access Control Lists (ACLs).\n\n"
-            f"Format your analysis professionally with an 'Executive Threat Overview Summary' and specific, actionable 'Remediation Steps'."
-            f"steps using clean Markdown styling.\n\n"
-            f"Also make sure to have an ending explicit callout as to whether or not the ingested data seems to indicate malicious events or not."
-            f"LOG DATA TO EVALUATE (JSON Format):\n{json.dumps(log_sample, indent=2)}"             
+            
+            f"CRITICAL COMMAND EXECUTION RULES:\n"
+            f"4. INTERNAL LOOPBACK IPS: If an asset is 127.0.0.1 or localhost, DO NOT provide firewall blocking commands. Provide system diagnostic steps (e.g., 'ss -tulpn').\n"
+            f"5. LOCAL LAN IPS: If an asset is a private network node (192.168.x.x, 10.x.x.x, 172.16.x.x), recommend host isolation and 'sudo conntrack -D -s [IP]'.\n"
+            f"6. EXTERNAL PUBLIC IPS: Provide 'sudo iptables -A INPUT -s [IP] -j DROP' and 'fail2ban-client' commands ONLY for remote public internet addresses.\n\n"
+            
+            f"LOG DATA TO EVALUATE (JSON Format):\n{json.dumps(log_sample, indent=2)}\n\n"
+            
+            f"STRICT OUTPUT MANDATE:\n"
+            f"You must respond ONLY with a valid JSON object matching this schema structure. Do not include markdown block wrapping or backticks outside the values:\n"
+            f"{{\n"
+            f"    \"ai_analysis\": \"### **Threat Overview: [Insert 'Malicious Activity Detected' OR 'No Malicious Activity Indicated']**\\n\\n[Write a clean, 2-paragraph executive assessment here. Apply the contextual reasoning rules, protocol sanity checks, and performance safeguards directly to explain the findings.]\\n\\n### **Recommendations:**\\n1. [Recommendation 1]\\n2. [Recommendation 2]\\n3. [Recommendation 3]\\n4. [Recommendation 4]\\n\\n**[Conclude with a final, single-sentence explicit callout stating exactly whether or not malicious activity was verified.]**\",\n"
+            f"    \"playbook_meta\": \"Write an on-demand, point-and-click mitigation runbook for an IT generalist. Use clear section headers, separate items sequentially, and output clean copy-pasteable bash terminal commands wrapped safely according to the IP type boundaries outlined above.\"\n"
+            f"}}"
         )
 
         try:
-            # Deliver synchronous POST transaction block to local socket loop
+            # Target URL evaluation (synchronizing self.ollama_url or self.endpoint)
+            url = getattr(self, 'ollama_url', None) or getattr(self, 'endpoint', "http://localhost:11434/api/generate")
+            
             response = requests.post(
-                self.ollama_url,
+                url,
                 json={
                     "model": self.model_target, 
                     "prompt": prompt, 
-                    "stream": False  # Return complete text block at once to simplify UI rendering
+                    "format": "json", # Instructs Ollama to strictly enforce a valid JSON return array
+                    "stream": False   
                 },
-                timeout=25  # Prevent slow inferences from locking up the UI thread indefinitely
+                timeout=90  # Bumped to 90s to give consumer hardware room to process dual output blocks safely
             )
             
             if response.status_code == 200:
-                # Extract response text straight out of Ollama's unified return object
-                return response.json().get("response")
+                result_json = response.json()
+                # Parse the inner stringified response returned by the model
+                payload = json.loads(result_json.get("response", "{}"))
+                
+                ai_analysis = payload.get("ai_analysis", "No dashboard overview generated.")
+                playbook_meta = payload.get("playbook_meta", "No automated remediation commands compiled.")
+                
+                return ai_analysis, playbook_meta
             else:
-                return (
+                err_msg = (
                     f"### 🤖 AI Core Exception\n"
                     f"Local engine returned status code: `{response.status_code}`.\n"
                     f"Verify that model tracking registers match target: `{self.model_target}`."
                 )
+                return err_msg, "System remediation playbook generation aborted."
                 
-        except requests.exceptions.RequestException:
-            # Fallback error card providing user action options if the background server drops
-            return (
-                "### 🤖 Local AI Analyst Engine Triage Report\n\n"
-                "**Status:** Connection to Core Local LLM Refused\n\n"
-                "**Remediation Steps to Activate:**\n"
-                "1. Ensure the **Ollama** engine is actively running on your host machine.\n"
-                "2. Open a terminal and run `ollama run llama3` to confirm the model file is cached locally.\n"
-                "3. Re-execute the SentinelLite upload analyzer routine."
+        except (requests.exceptions.RequestException, json.JSONDecodeError) as e:
+            # Synchronized fallback error documentation for non-technical administrators
+            fallback_summary = (
+                f"### 🤖 Local AI Analyst Engine Triage Report\n\n"
+                f"**Status:** Communication with Core Local LLM Aborted\n\n"
+                f"**Error Context:** `{str(e)}` \n\n"
+                f"**Remediation Steps to Activate:**\n"
+                f"1. Ensure the **Ollama** engine is actively running on your host machine.\n"
+                f"2. Open a terminal and run `ollama list` to confirm that `{self.model_target}` is successfully cached.\n"
+                f"3. Re-execute the SentinelLite upload analyzer routine."
             )
+            return fallback_summary, "System remediation logic unavailable."
