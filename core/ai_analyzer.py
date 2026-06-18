@@ -6,12 +6,12 @@ import json
 import requests
 
 class AIIntegrationLayer:
-    def __init__(self, use_local_ai=False):
+    def __init__(self, use_local_ai=True):
         self.active = use_local_ai
         # Default local engine listening port for Ollama instances
         self.ollama_url = "http://localhost:11434/api/generate"
         # Using llama3 as the dedicated security analyzer target
-        self.model_target = "llama3"
+        self.model_target = "llama3:latest"
         
     def generate_incident_summary(self, normalized_events, detected_type):
         """
