@@ -111,4 +111,14 @@ input[type="checkbox"] {
 .badge-warning {
     background: rgba(255, 177, 59, 0.1);
     color: var(--status-warning);
-    border: 1px solid rgba(255, 177, 59, 0
+    border: 1px solid rgba(255, 177, 59, 0);
+}
+
+#download-playbook-btn {
+    display: inline-block;
+    width: auto;             /* Stops the button from stretching full-width */
+    padding: 6px 14px;       /* Slims down the vertical and horizontal spacing */
+    font-size: 0.85rem;      /* Drops the text size slightly to a clean micro-label */
+    font-weight: 500;        /* Keeps it clean but distinct */
+    line-height: 1.2;
+}
